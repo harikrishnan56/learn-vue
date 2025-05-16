@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700;800;900&display=swap');
+
+/* Font face declarations for better performance */
+@font-face {
+  font-family: 'Gabarito';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/gabarito/v1/QGYvz_80N8r2IqECcHnXxA.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'Gabarito';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/gabarito/v1/QGYvz_80N8r2IqECcHnXxA.woff2) format('woff2');
+}
+
+/* Apply Gabarito as default font */
+body {
+  font-family: 'Gabarito', system-ui, -apple-system, sans-serif;
+} 
