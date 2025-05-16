@@ -15,6 +15,7 @@ export default {
         'brand-gray-light': '#F4F4F4',
         'brand-gray-text': '#AAAAAA',
         'brand-icon-dark': '#000D26',
+        'brand-blue': '#6BADD7',
       },
       fontFamily: {
         'gabarito': ['Gabarito', 'system-ui', '-apple-system', 'sans-serif'],
