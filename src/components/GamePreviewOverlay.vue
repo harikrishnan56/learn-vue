@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import BaseButton from './BaseButton.vue'
+import CountdownOverlay from './CountdownOverlay.vue'
 
 interface Props {
   isVisible: boolean
@@ -12,24 +13,19 @@ const emit = defineEmits<{
   (e: 'gameStart'): void
 }>()
 
-const isCountingDown = ref(false)
-const countdownValue = ref(3)
+const showCountdown = ref(false)
 
 function handleClose() {
   emit('close')
 }
 
-function startCountdown() {
-  isCountingDown.value = true
-  const interval = setInterval(() => {
-    countdownValue.value--
-    if (countdownValue.value === 0) {
-      clearInterval(interval)
-      setTimeout(() => {
-        emit('gameStart')
-      }, 1000)
-    }
-  }, 1000)
+function handleStartClick() {
+  showCountdown.value = true
+}
+
+function handleCountdownComplete() {
+  showCountdown.value = false
+  emit('gameStart')
 }
 </script>
 
@@ -56,19 +52,19 @@ function startCountdown() {
 
       <div class="bg-brand-gray-light rounded-[10px] p-4">
         <h3 class="font-gabarito font-bold mb-4">Compare the numbers and find out who is taller!</h3>
-        <div class="bg-brand-white rounded-[10px] h-[200px] mb-4 flex items-center justify-center">
-          <span v-if="isCountingDown" class="text-6xl font-gabarito font-bold text-brand-teal">
-            {{ countdownValue }}
-          </span>
-        </div>
+        <div class="bg-brand-white rounded-[10px] h-[200px] mb-4"></div>
         <BaseButton
-          v-if="!isCountingDown"
           label="Let's go!"
           variant="primary"
           width="w-full"
-          @click="startCountdown"
+          @click="handleStartClick"
         />
       </div>
     </div>
+
+    <CountdownOverlay
+      :is-visible="showCountdown"
+      @countdown-complete="handleCountdownComplete"
+    />
   </div>
 </template>
