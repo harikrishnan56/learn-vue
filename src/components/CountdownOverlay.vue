@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import BluepetIcon from './icons/BluepetIcon.vue'
 
 interface Props {
   isVisible: boolean
@@ -18,7 +19,7 @@ let countdownInterval: number | undefined = undefined;
 function startCountdownSequence() {
   currentText.value = 'Ready?' // Reset text
   isAnimating.value = true
-  showObjective.value = false; // Ensure objective is hidden initially
+  showObjective.value = false;
   const sequence = ['Ready?', '3', '2', '1']
   let currentIndex = 0
 
@@ -37,8 +38,7 @@ function startCountdownSequence() {
       showObjective.value = true; // Show the objective content
       setTimeout(() => {
         emit('countdownComplete')
-        // The overlay will be hidden by the parent component after this event
-      }, 500); // Keep objective visible briefly before countdownComplete is emitted
+      }, 500); 
     }
   }, 500)
 }
@@ -75,7 +75,10 @@ watch(() => props.isVisible, (newValue) => {
       {{ currentText }}
     </div>
     
-    <div v-if="showObjective" class="flex flex-col items-center justify-center transition-opacity duration-300" :class="{ 'opacity-100': isVisible && showObjective, 'opacity-0': !isVisible || !showObjective }">
+    <div v-if="showObjective" class="flex flex-col items-center justify-center transition-opacity duration-300 relative w-full" :class="{ 'opacity-100': isVisible && showObjective, 'opacity-0': !isVisible || !showObjective }">
+      <div class="absolute top-8 left-8">
+        <BluepetIcon width="41" height="39" />
+      </div>
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-brand-teal mb-4">
         <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M8 14.5C8 14.5 9.5 16 12 16C14.5 16 16 14.5 16 14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
