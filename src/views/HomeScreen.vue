@@ -1,21 +1,40 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import BaseButton from '../components/BaseButton.vue'
 
 const router = useRouter()
 
 function goToStage1Preview() {
   router.push({ name: 'level-preview', params: { stageId: 'stage1' } })
 }
+
+function goToSettings() {
+  router.push({ name: 'settings' })
+}
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center min-h-screen p-4">
-    <h1 class="text-5xl font-bold mb-12 text-yellow-400">Giraff Game</h1>
-    <button
-      @click="goToStage1Preview"
-      class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg text-2xl"
-    >
-      Play Stage 1
-    </button>
+  <div class="flex flex-col items-center justify-center min-h-screen p-6 bg-brand-white">
+    <div class="w-full max-w-[360px] flex flex-col items-center">
+      <div class="mb-16">
+        <img src="../assets/logo.svg" alt="Giraff Game" class="w-[240px] h-auto" />
+      </div>
+      
+      <div class="w-full space-y-4">
+        <BaseButton
+          label="Play Stage 1"
+          variant="primary"
+          width="w-full"
+          @click="goToStage1Preview"
+        />
+        
+        <BaseButton
+          label="Settings"
+          variant="secondary"
+          width="w-full"
+          @click="goToSettings"
+        />
+      </div>
+    </div>
   </div>
 </template>
