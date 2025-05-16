@@ -38,7 +38,7 @@ function startCountdownSequence() {
       showObjective.value = true; // Show the objective content
       setTimeout(() => {
         emit('countdownComplete')
-      }, 500); 
+      }, 1500); 
     }
   }, 500)
 }
