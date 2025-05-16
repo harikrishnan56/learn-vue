@@ -1,5 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import HomeScreen from '../views/HomeScreen.vue'
+import LevelPreviewScreen from '../views/LevelPreviewScreen.vue'
+import GameScreen from '../views/GameScreen.vue'
+import SettingsScreen from '../views/SettingsScreen.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,17 +10,26 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: HomeScreen
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
+      path: '/stage/:stageId/preview',
+      name: 'level-preview',
+      component: LevelPreviewScreen,
+      props: true
     },
-  ],
+    {
+      path: '/game/:stageId',
+      name: 'game',
+      component: GameScreen,
+      props: true
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: SettingsScreen
+    }
+  ]
 })
 
 export default router
