@@ -1,15 +1,23 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '../components/BaseButton.vue'
+import GamePreviewOverlay from '../components/GamePreviewOverlay.vue'
 
 const router = useRouter()
+const isPreviewVisible = ref(false)
 
-function goToPlay() {
-  router.push({ name: 'level-preview', params: { stageId: 'stage1' } })
+function showPreview() {
+  isPreviewVisible.value = true
 }
 
-function goToSettings() {
-  router.push({ name: 'settings' })
+function hidePreview() {
+  isPreviewVisible.value = false
+}
+
+function startGame() {
+  hidePreview()
+  router.push({ name: 'level-preview', params: { stageId: 'stage1' } })
 }
 </script>
 
@@ -25,16 +33,22 @@ function goToSettings() {
           label="Play"
           variant="primary"
           width="w-full"
-          @click="goToPlay"
+          @click="showPreview"
         />
         
         <BaseButton
           label="Settings"
           variant="secondary"
           width="w-full"
-          @click="goToSettings"
+          @click="router.push({ name: 'settings' })"
         />
       </div>
     </div>
+
+    <GamePreviewOverlay
+      :is-visible="isPreviewVisible"
+      @close="hidePreview"
+      @start="startGame"
+    />
   </div>
 </template>
