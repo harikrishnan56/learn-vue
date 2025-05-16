@@ -6,6 +6,7 @@ import GamePreviewOverlay from '../components/GamePreviewOverlay.vue'
 
 const router = useRouter()
 const isPreviewVisible = ref(false)
+const isGameStarted = ref(false)
 
 function showPreview() {
   isPreviewVisible.value = true
@@ -17,13 +18,13 @@ function hidePreview() {
 
 function startGame() {
   hidePreview()
-  router.push({ name: 'game', params: { stageId: 'stage1' } })
+  isGameStarted.value = true
 }
 </script>
 
 <template>
   <div class="flex flex-col items-center justify-center min-h-screen p-6 bg-brand-white">
-    <div class="w-full max-w-[360px] flex flex-col items-center">
+    <div v-if="!isGameStarted" class="w-full max-w-[360px] flex flex-col items-center">
       <div class="mb-16">
         <img src="../assets/logo.svg" alt="The Tall Giraff" class="w-[240px] h-auto" />
       </div>
@@ -43,6 +44,10 @@ function startGame() {
           @click="router.push({ name: 'settings' })"
         />
       </div>
+    </div>
+
+    <div v-else class="w-full h-full">
+      <!-- Game content will go here -->
     </div>
 
     <GamePreviewOverlay
