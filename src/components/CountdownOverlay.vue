@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 
 interface Props {
   isVisible: boolean
@@ -12,36 +12,52 @@ const emit = defineEmits<{
 
 const currentText = ref('Ready?')
 const isAnimating = ref(false)
+let countdownInterval: number | undefined = undefined;
 
-function startCountdown() {
+function startCountdownSequence() {
+  currentText.value = 'Ready?' // Reset text
   isAnimating.value = true
   const sequence = ['Ready?', '3', '2', '1']
   let currentIndex = 0
 
-  const interval = setInterval(() => {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+  }
+
+  countdownInterval = setInterval(() => {
     currentIndex++
     if (currentIndex < sequence.length) {
       currentText.value = sequence[currentIndex]
     } else {
-      clearInterval(interval)
+      clearInterval(countdownInterval)
+      countdownInterval = undefined;
       setTimeout(() => {
         emit('countdownComplete')
+        isAnimating.value = false // Reset animation state
       }, 500)
     }
   }, 500)
 }
 
-onMounted(() => {
-  if (props.isVisible) {
-    startCountdown()
+watch(() => props.isVisible, (newValue) => {
+  if (newValue) {
+    startCountdownSequence()
+  } else {
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      countdownInterval = undefined;
+    }
+    isAnimating.value = false; // Ensure animation stops if overlay is hidden mid-countdown
+    currentText.value = 'Ready?'; // Reset for next time
   }
 })
+
 </script>
 
 <template>
   <div 
     :class="[
-      'fixed inset-0 bg-brand-white flex items-center justify-center transition-opacity duration-300',
+      'fixed inset-0 bg-brand-white flex items-center justify-center transition-opacity duration-300 z-50',
       isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
     ]"
   >
