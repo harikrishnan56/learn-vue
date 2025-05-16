@@ -4,7 +4,7 @@ import BaseButton from '../components/BaseButton.vue'
 
 const router = useRouter()
 
-function goToStage1Preview() {
+function goToPlay() {
   router.push({ name: 'level-preview', params: { stageId: 'stage1' } })
 }
 
@@ -17,15 +17,15 @@ function goToSettings() {
   <div class="flex flex-col items-center justify-center min-h-screen p-6 bg-brand-white">
     <div class="w-full max-w-[360px] flex flex-col items-center">
       <div class="mb-16">
-        <img src="../assets/logo.svg" alt="Giraff Game" class="w-[240px] h-auto" />
+        <img src="../assets/logo.svg" alt="The Tall Giraff" class="w-[240px] h-auto" />
       </div>
       
       <div class="w-full space-y-4">
         <BaseButton
-          label="Play Stage 1"
+          label="Play"
           variant="primary"
           width="w-full"
-          @click="goToStage1Preview"
+          @click="goToPlay"
         />
         
         <BaseButton
