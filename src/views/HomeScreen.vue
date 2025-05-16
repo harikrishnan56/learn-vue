@@ -17,7 +17,7 @@ function hidePreview() {
 
 function startGame() {
   hidePreview()
-  router.push({ name: 'level-preview', params: { stageId: 'stage1' } })
+  router.push({ name: 'game', params: { stageId: 'stage1' } })
 }
 </script>
 
@@ -48,7 +48,7 @@ function startGame() {
     <GamePreviewOverlay
       :is-visible="isPreviewVisible"
       @close="hidePreview"
-      @start="startGame"
+      @game-start="startGame"
     />
   </div>
 </template>
