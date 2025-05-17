@@ -79,22 +79,14 @@ const handleDragGiraffe = (sourceId: string, targetId: string) => {
   const sourceIndex = giraffes.value.findIndex(g => g.id === sourceId)
   const targetIndex = giraffes.value.findIndex(g => g.id === targetId)
   
-  // Prevent dragging leftmost giraffe to the left of itself or rightmost to the right of itself
-  if (sourceIndex !== -1 && targetIndex !== -1 && sourceIndex !== targetIndex) {
-    // Calculate the effective new position - prevent rotating from first to last or last to first
-    if (sourceIndex === 0 && targetIndex === giraffes.value.length - 1) {
-      // Don't allow leftmost giraffe to move to rightmost position
-      return;
-    }
+  if (sourceIndex !== -1 && targetIndex !== -1) {
+    const maxMove = Math.floor(giraffes.value.length / 2)
+    const moveDistance = Math.abs(targetIndex - sourceIndex)
     
-    if (sourceIndex === giraffes.value.length - 1 && targetIndex === 0) {
-      // Don't allow rightmost giraffe to move to leftmost position
-      return;
+    if (moveDistance <= maxMove) {
+      const [movedItem] = giraffes.value.splice(sourceIndex, 1)
+      giraffes.value.splice(targetIndex, 0, movedItem)
     }
-    
-    // Move only if it's a valid move
-    const [movedItem] = giraffes.value.splice(sourceIndex, 1)
-    giraffes.value.splice(targetIndex, 0, movedItem)
   }
 }
 
