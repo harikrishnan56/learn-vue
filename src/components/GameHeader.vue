@@ -16,13 +16,13 @@ const emit = defineEmits<{
 
     <div class="flex items-center gap-4 flex-shrink-0 ml-auto">
       <button 
-        class="p-2 hover:bg-brand-gray-light rounded-full transition-colors shadow-button-giraffe shadow-button-circle"
+        class="p-2 hover:bg-brand-gray-light rounded-full transition-colors shadow-button-gray shadow-button-circle"
         @click="emit('pause')"
       >
         <Pause class="w-5 h-5 text-brand-gray-dark" />
       </button>
       <button 
-        class="p-2 hover:bg-brand-gray-light rounded-full transition-colors shadow-button-giraffe shadow-button-circle"
+        class="p-2 hover:bg-brand-gray-light rounded-full transition-colors shadow-button-gray shadow-button-circle"
         @click="emit('settings')"
       >
         <Ellipsis class="w-5 h-5 text-brand-gray-dark" />
