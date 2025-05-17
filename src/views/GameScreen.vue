@@ -166,7 +166,7 @@ onMounted(() => {
     </div>
     
     <!-- Fixed controls -->
-    <GameControls
+    <GameControls v-if="!showResultOverlay"
       :giraffe-heights-data="giraffeControlsData"
       @check="handleCheck"
       @selectNumber="handleNumberSelect"
