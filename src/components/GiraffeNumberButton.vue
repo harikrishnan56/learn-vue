@@ -10,15 +10,29 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'select'): void
+  (e: 'dragstart', event: DragEvent): void
+  (e: 'dragend'): void
 }>()
+
+function handleDragStart(e: DragEvent) {
+  emit('dragstart', e)
+}
+
+function handleDragEnd() {
+  emit('dragend')
+}
 </script>
 
 <template>
   <button
+    draggable="true"
     @click="emit('select')"
+    @dragstart="handleDragStart"
+    @dragend="handleDragEnd"
     :class="[
-      'w-[98px] h-[61px] rounded-[10px] border-2 transition-all duration-200 text-xl font-gabarito font-bold',
-      selected ? 'bg-giraffe-fill border-giraffe-stroke text-giraffe-stroke' : 'bg-brand-gray-light border-transparent text-brand-gray-text hover:bg-opacity-80'
+      'w-[98px] h-[61px] rounded-[10px] text-xl font-gabarito font-bold transition-all duration-200 cursor-move',
+      'bg-giraffe-fill border border-giraffe-stroke text-giraffe-stroke shadow-button-gray',
+      'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-giraffe-stroke hover:bg-opacity-90'
     ]"
   >
     {{ number }}
