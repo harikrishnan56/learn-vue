@@ -10,21 +10,37 @@ interface GiraffeData {
   height: number
 }
 
+interface GiraffeDisplayState extends GiraffeData {
+  speechText: string | null
+  currentMood: 'happy' | 'confused' | 'idle' | 'sad'
+}
+
 const router = useRouter()
 
-// Game content is shown by default now, as countdown happens before this screen loads
 const showGameContent = ref(true)
 
-// Handle feedback state when user checks their answer
-const showFeedback = ref(false)
-const isCorrect = ref(false)
+const isOverallCorrect = ref(false)
 
 const giraffes = ref<GiraffeData[]>([])
 const selectedNumberDisplayValue = ref<number | null>(null)
 
-// Create a computed property to pass to GameControls
+const showSpeechBubblesGlobal = ref(false)
+const giraffeDisplayStates = ref<GiraffeDisplayState[]>([])
+
 const giraffeControlsData = computed(() => {
   return giraffes.value.map(g => ({ id: g.id, height: g.height }))
+})
+
+const gameContentData = computed(() => {
+  return giraffes.value.map(g => {
+    const displayState = giraffeDisplayStates.value.find(s => s.id === g.id)
+    return {
+      ...g,
+      speechText: displayState?.speechText || null,
+      currentMood: displayState?.currentMood || 'happy',
+      showSpeechBubble: showSpeechBubblesGlobal.value
+    }
+  })
 })
 
 const generateGiraffes = (count = 3) => {
@@ -35,13 +51,19 @@ const generateGiraffes = (count = 3) => {
     if (!usedHeights.has(height)) {
       usedHeights.add(height)
       newGiraffes.push({
-        id: `g-${Date.now()}-${i}`, // More unique ID
+        id: `g-${Date.now()}-${i}-${Math.random().toString(36).substring(7)}`,
         height
       })
       i++
     }
   }
   giraffes.value = newGiraffes
+  giraffeDisplayStates.value = newGiraffes.map(g => ({
+    ...g,
+    speechText: null,
+    currentMood: 'happy'
+  }))
+  showSpeechBubblesGlobal.value = false
 }
 
 const handlePause = () => {
@@ -53,26 +75,49 @@ const handleSettings = () => {
 }
 
 const handleCheck = () => {
-  showFeedback.value = true
-  const currentOrder = giraffes.value.map(g => g.height)
-  const correctOrder = [...currentOrder].sort((a, b) => a - b)
-  
-  isCorrect.value = JSON.stringify(currentOrder) === JSON.stringify(correctOrder)
-  
-  if (isCorrect.value) {
+  const currentOrderHeights = giraffes.value.map(g => g.height)
+  const correctOrderHeights = [...currentOrderHeights].sort((a, b) => a - b)
+  isOverallCorrect.value = JSON.stringify(currentOrderHeights) === JSON.stringify(correctOrderHeights)
+
+  const minActualHeight = Math.min(...giraffes.value.map(g => g.height))
+  const maxActualHeight = Math.max(...giraffes.value.map(g => g.height))
+
+  giraffeDisplayStates.value = giraffes.value.map((g, index) => {
+    // Generate speech text based on giraffe height
+    let text = `I'm taller than ${minActualHeight}`
+    
+    if (g.height === minActualHeight) {
+      text = `I'm smallest`
+    } else if (g.height === maxActualHeight) {
+      text = `I'm tallest`
+    }
+    
+    // Determine individual mood
+    const isThisGiraffeCorrectlyPlaced = g.height === correctOrderHeights[index];
+    let mood: 'happy' | 'sad' = 'happy'; // Default to happy
+    
+    if (isOverallCorrect.value) {
+      mood = 'happy';
+    } else {
+      mood = isThisGiraffeCorrectlyPlaced ? 'happy' : 'sad';
+    }
+
+    return {
+      ...g,
+      speechText: text,
+      currentMood: mood
+    }
+  })
+
+  showSpeechBubblesGlobal.value = true
+
+  if (isOverallCorrect.value) {
     setTimeout(() => {
-      showFeedback.value = false
-      // Potentially move to next level or show success
-      generateGiraffes() // For now, just regenerate for a new round
-    }, 2000)
-  } else {
-    setTimeout(() => {
-      showFeedback.value = false
+      generateGiraffes()
     }, 2000)
   }
 }
 
-// Renamed to handleMoveGiraffe to match emit from GameControls
 const handleMoveGiraffe = (sourceId: string, targetId: string) => {
   const sourceIndex = giraffes.value.findIndex(g => g.id === sourceId)
   const targetIndex = giraffes.value.findIndex(g => g.id === targetId)
@@ -81,6 +126,8 @@ const handleMoveGiraffe = (sourceId: string, targetId: string) => {
     const temp = giraffes.value[sourceIndex]
     giraffes.value[sourceIndex] = giraffes.value[targetIndex]
     giraffes.value[targetIndex] = temp
+    
+    showSpeechBubblesGlobal.value = false
   }
 }
 
@@ -105,7 +152,7 @@ onMounted(() => {
     <!-- Main content area -->
     <div class="pt-[76px]">
       <GameContent 
-        :giraffes="giraffes"
+        :giraffes="gameContentData"
         class="pb-0 h-[calc(100vh-316px)]"
       />
     </div>
@@ -118,25 +165,5 @@ onMounted(() => {
       @moveGiraffe="handleMoveGiraffe"
       class="fixed bottom-0 left-0 right-0 z-10"
     />
-    
-    <!-- Feedback overlay -->
-    <div 
-      v-if="showFeedback" 
-      class="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
-    >
-      <div 
-        :class="[
-          'p-8 rounded-2xl text-center transform transition-all duration-300',
-          isCorrect ? 'bg-brand-green text-white' : 'bg-brand-orange text-white'
-        ]"
-      >
-        <h2 class="text-3xl font-bold mb-2">
-          {{ isCorrect ? 'Correct!' : 'Try Again!' }}
-        </h2>
-        <p class="text-lg">
-          {{ isCorrect ? 'Great job ordering the giraffes!' : 'The order isn\'t quite right yet.' }}
-        </p>
-      </div>
-    </div>
   </div>
 </template> 
