@@ -1,20 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import GameHeader from '../components/GameHeader.vue'
 import GameContent from '../components/GameContent.vue'
 import GameControls from '../components/GameControls.vue'
-import CountdownOverlay from '../components/CountdownOverlay.vue'
 
 const router = useRouter()
-const isCountdownVisible = ref(true)
-const showGameContent = ref(false)
 const objective = ref('Order the giraffes by height')
 
-const handleCountdownComplete = () => {
-  isCountdownVisible.value = false
-  showGameContent.value = true
-}
+// Game content is shown by default now, as countdown happens before this screen loads
+const showGameContent = ref(true)
 
 const handlePause = () => {
   console.log('Game paused')
@@ -31,15 +26,15 @@ const handlePreview = () => {
 const handleSave = () => {
   console.log('Save clicked')
 }
+
+onMounted(() => {
+  // Simulating countdown start if needed, or rely on CountdownOverlay's internal logic
+})
 </script>
 
 <template>
   <div class="min-h-screen bg-brand-white">
-    <CountdownOverlay
-      :is-visible="isCountdownVisible"
-      @countdown-complete="handleCountdownComplete"
-    />
-    
+    <!-- Game content is now always visible if this screen is active -->
     <div v-if="showGameContent" class="min-h-screen pb-[76px] pt-[76px]">
       <GameHeader 
         :objective="objective"
@@ -53,6 +48,10 @@ const handleSave = () => {
         @preview="handlePreview"
         @save="handleSave"
       />
+    </div>
+    <div v-else>
+      <!-- This part should ideally not be reached if logic is correct -->
+      <p>Loading Game Screen...</p>
     </div>
   </div>
 </template> 

@@ -12,19 +12,19 @@ const emit = defineEmits<{
 }>()
 
 const currentText = ref('Ready?')
-const isAnimating = ref(false)
+const isAnimating = ref(false) // Will be used by the original template if restored
 const showObjective = ref(false)
-let countdownInterval: number | undefined = undefined;
+let countdownInterval: number | undefined = undefined
 
 function startCountdownSequence() {
-  currentText.value = 'Ready?' // Reset text
+  currentText.value = 'Ready?'
   isAnimating.value = true
-  showObjective.value = false;
+  showObjective.value = false
   const sequence = ['Ready?', '3', '2', '1']
   let currentIndex = 0
 
   if (countdownInterval) {
-    clearInterval(countdownInterval);
+    clearInterval(countdownInterval)
   }
 
   countdownInterval = setInterval(() => {
@@ -33,14 +33,14 @@ function startCountdownSequence() {
       currentText.value = sequence[currentIndex]
     } else {
       clearInterval(countdownInterval)
-      countdownInterval = undefined;
-      isAnimating.value = false; // Hide the countdown text animation
-      showObjective.value = true; // Show the objective content
+      countdownInterval = undefined
+      isAnimating.value = false
+      showObjective.value = true
       setTimeout(() => {
         emit('countdownComplete')
-      }, 1500); 
+      }, 1500) // Original objective display time
     }
-  }, 500)
+  }, 500) // Original interval time
 }
 
 watch(() => props.isVisible, (newValue) => {
@@ -48,14 +48,14 @@ watch(() => props.isVisible, (newValue) => {
     startCountdownSequence()
   } else {
     if (countdownInterval) {
-      clearInterval(countdownInterval);
-      countdownInterval = undefined;
+      clearInterval(countdownInterval)
+      countdownInterval = undefined
     }
-    isAnimating.value = false;
-    showObjective.value = false;
-    currentText.value = 'Ready?'; // Reset text for next time
+    isAnimating.value = false
+    showObjective.value = false
+    currentText.value = 'Ready?'
   }
-})
+}, { immediate: props.isVisible }) // Ensure it runs if initially visible
 
 </script>
 
