@@ -27,6 +27,7 @@ const selectedNumberDisplayValue = ref<number | null>(null)
 
 const showSpeechBubblesGlobal = ref(false)
 const showResultOverlay = ref(false)
+const overlayType = ref<'success'|'error'>('success')
 const giraffeDisplayStates = ref<GiraffeDisplayState[]>([])
 
 const giraffeControlsData = computed(() => {
@@ -113,11 +114,10 @@ const handleCheck = () => {
 
   showSpeechBubblesGlobal.value = true
 
-  if (isOverallCorrect.value) {
-    setTimeout(() => {
-      showResultOverlay.value = true
-    }, 1500)
-  }
+  overlayType.value = isOverallCorrect.value ? 'success' : 'error'
+  setTimeout(() => {
+    showResultOverlay.value = true
+  }, 1500)
 }
 
 const handleMoveGiraffe = (sourceId: string, targetId: string) => {
@@ -139,8 +139,10 @@ const handleNumberSelect = (displayValue: number) => {
 
 function onContinue() {
   showResultOverlay.value = false
-  generateGiraffes()
   showSpeechBubblesGlobal.value = false
+  if (overlayType.value === 'success') {
+    generateGiraffes()
+  }
 }
 
 onMounted(() => {
@@ -166,13 +168,13 @@ onMounted(() => {
     </div>
     
     <!-- Fixed controls -->
-    <GameControls v-if="!showResultOverlay"
+    <GameControls
       :giraffe-heights-data="giraffeControlsData"
       @check="handleCheck"
       @selectNumber="handleNumberSelect"
       @moveGiraffe="handleMoveGiraffe"
       class="fixed bottom-0 left-0 right-0 z-10"
     />
-    <FeedbackOverlay :visible="showResultOverlay" @continue="onContinue" />
+    <FeedbackOverlay :visible="showResultOverlay" :type="overlayType" @continue="onContinue" />
   </div>
 </template> 

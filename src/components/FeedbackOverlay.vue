@@ -1,7 +1,7 @@
 <template>
-  <transition name="slide-up">
-    <div v-if="visible" class="fixed left-0 right-0 bottom-0 flex justify-center z-50">
-      <div class="bg-[#3A8737] text-white p-6 rounded-t-2xl w-11/12 max-w-md mx-auto">
+  <transition name="slide">
+    <div v-if="visible" class="fixed inset-0 bg-black/50 z-50">
+      <div class="absolute left-0 right-0 bottom-0 mb-4 mx-auto bg-[#3A8737] text-white p-8 rounded-t-2xl w-11/12 max-w-md">
         <h2 class="text-3xl font-gabarito font-normal mb-2">Awesome!</h2>
         <p class="text-lg mb-6">The giraffes are now in order.</p>
         <BaseButton label="Continue" variant="secondary" @click="onContinue" />
@@ -30,16 +30,16 @@ function onContinue() {
 </script>
 
 <style scoped>
-.slide-up-enter-active,
-.slide-up-leave-active {
+.slide-enter-active,
+.slide-leave-active {
   transition: transform 0.5s ease;
 }
-.slide-up-enter-from,
-.slide-up-leave-to {
+.slide-enter-from,
+.slide-leave-to {
   transform: translateY(100%);
 }
-.slide-up-enter-to,
-.slide-up-leave-from {
+.slide-enter-to,
+.slide-leave-from {
   transform: translateY(0);
 }
 </style> 
