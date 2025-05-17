@@ -80,13 +80,9 @@ const handleDragGiraffe = (sourceId: string, targetId: string) => {
   const targetIndex = giraffes.value.findIndex(g => g.id === targetId)
   
   if (sourceIndex !== -1 && targetIndex !== -1) {
-    const maxMove = Math.floor(giraffes.value.length / 2)
-    const moveDistance = Math.abs(targetIndex - sourceIndex)
-    
-    if (moveDistance <= maxMove) {
-      const [movedItem] = giraffes.value.splice(sourceIndex, 1)
-      giraffes.value.splice(targetIndex, 0, movedItem)
-    }
+    const temp = giraffes.value[sourceIndex]
+    giraffes.value[sourceIndex] = giraffes.value[targetIndex]
+    giraffes.value[targetIndex] = temp
   }
 }
 
