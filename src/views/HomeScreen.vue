@@ -18,7 +18,7 @@ function hidePreview() {
 
 function startGame() {
   hidePreview()
-  isGameStarted.value = true
+  router.push('/game')
 }
 </script>
 
