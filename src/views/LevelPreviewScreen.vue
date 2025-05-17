@@ -5,7 +5,6 @@ import { useRouter, useRoute } from 'vue-router'
 interface StageDetails {
   title: string
   description: string
-  previewAnimationSrc: string
 }
 
 const router = useRouter()
@@ -14,8 +13,7 @@ const stageId = ref(route.params.stageId as string)
 
 const stageDetails = ref<StageDetails>({
   title: 'The Tall Giraffe',
-  description: 'A delightful game about giraffes of varying heights. Can you spot the tallest?',
-  previewAnimationSrc: '/path/to/stage1-preview-animation.riv'
+  description: 'A delightful game about giraffes of varying heights. Can you spot the tallest?'
 })
 
 function startGame() {
@@ -33,7 +31,7 @@ function startGame() {
       </div>
 
       <div class="bg-gray-700 h-64 w-full my-4 rounded flex items-center justify-center text-gray-500">
-        <span>Animated game preview/illustration goes here</span>
+        <span>Game preview coming soon</span>
       </div>
 
       <div class="mb-6">

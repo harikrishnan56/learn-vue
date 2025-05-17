@@ -37,12 +37,6 @@ function startGame() {
           @click="showPreview"
         />
         
-        <BaseButton
-          label="Settings"
-          variant="secondary"
-          width="w-full"
-          @click="router.push({ name: 'settings' })"
-        />
       </div>
     </div>
 

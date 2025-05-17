@@ -1,1 +1,0 @@
-  <h1 class="green text-blue-500">{{ msg }}</h1>

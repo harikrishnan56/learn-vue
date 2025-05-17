@@ -51,7 +51,7 @@ function handleCountdownComplete() {
       </div>
 
       <div class="bg-brand-gray-light rounded-[10px] p-4">
-        <h3 class="font-gabarito font-bold mb-4">Compare the numbers and find out who is taller!</h3>
+        <h3 class="font-gabarito font-bold mb-4 text-brand-black">Compare the numbers and find out who is taller!</h3>
         <div class="bg-brand-white rounded-[10px] h-[200px] mb-4"></div>
         <BaseButton
           label="Let's go!"

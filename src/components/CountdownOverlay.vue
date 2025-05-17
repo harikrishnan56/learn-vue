@@ -66,6 +66,10 @@ watch(() => props.isVisible, (newValue) => {
       isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
     ]"
   >
+    <div v-if="showObjective" class="absolute top-8 left-8 z-10">
+      <BluepetIcon width="41" height="39" />
+    </div>
+
     <div v-if="!showObjective"
       :class="[
         'text-[72px] font-gabarito font-bold text-brand-blue transition-all duration-300 transform',
@@ -75,10 +79,7 @@ watch(() => props.isVisible, (newValue) => {
       {{ currentText }}
     </div>
     
-    <div v-if="showObjective" class="flex flex-col items-center justify-center transition-opacity duration-300 relative w-full" :class="{ 'opacity-100': isVisible && showObjective, 'opacity-0': !isVisible || !showObjective }">
-      <div class="absolute top-8 left-8">
-        <BluepetIcon width="41" height="39" />
-      </div>
+    <div v-if="showObjective" class="flex flex-col items-center justify-center transition-opacity duration-300 w-full" :class="{ 'opacity-100': isVisible && showObjective, 'opacity-0': !isVisible || !showObjective }">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-brand-teal mb-4">
         <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M8 14.5C8 14.5 9.5 16 12 16C14.5 16 16 14.5 16 14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
