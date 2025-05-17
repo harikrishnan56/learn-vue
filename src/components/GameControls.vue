@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { GripVertical, MoveHorizontal } from 'lucide-vue-next'
 import BaseButton from './BaseButton.vue'
 import GiraffeNumberButton from './GiraffeNumberButton.vue'
@@ -9,12 +9,22 @@ interface NumberButton {
   value: number
 }
 
+interface Props {
+  giraffeHeights: number[]
+}
+
+const props = defineProps<Props>()
+
 const selectedNumber = ref<number | null>(null)
-const buttons = ref<NumberButton[]>([
-  { id: 1, value: 3 },
-  { id: 2, value: 4 },
-  { id: 3, value: 5 }
-])
+const buttons = ref<NumberButton[]>([])
+
+watch(
+  () => props.giraffeHeights,
+  (heights) => {
+    buttons.value = heights.map((_, index) => ({ id: index + 1, value: index + 1 }))
+  },
+  { immediate: true }
+)
 
 const draggedButton = ref<NumberButton | null>(null)
 const dragOverButton = ref<NumberButton | null>(null)
@@ -22,6 +32,7 @@ const dragOverButton = ref<NumberButton | null>(null)
 const emit = defineEmits<{
   (e: 'check'): void
   (e: 'selectNumber', value: number): void
+  (e: 'moveGiraffe', sourceId: string, targetId: string): void
 }>()
 
 function handleCheck() {
@@ -63,6 +74,8 @@ function handleDrop(e: DragEvent) {
   if (draggedIndex !== -1 && dropIndex !== -1) {
     const [movedButton] = buttons.value.splice(draggedIndex, 1)
     buttons.value.splice(dropIndex, 0, movedButton)
+    
+    emit('moveGiraffe', draggedButton.value.id.toString(), dragOverButton.value.id.toString())
   }
   
   draggedButton.value = null
@@ -82,10 +95,10 @@ const isDragOver = (id: number) => dragOverButton.value?.id === id && draggedBut
     <div class="w-full h-2 bg-brand-green-strip"></div>
     <div class="bg-brand-green-light p-4 min-h-[238px] flex flex-col justify-center">
       <div class="container mx-auto px-4">
-        <div class="flex flex-col items-center gap-4 max-w-[360px] mx-auto">
-          <div class="flex justify-center gap-4 w-full mb-4">
+        <div class="flex flex-col items-center gap-4 w-full sm:max-w-[360px] mx-auto">
+          <div class="flex justify-center gap-2 md:gap-4 w-full mb-4">
             <div
-              v-for="button in buttons"
+              v-for="(button, index) in buttons"
               :key="button.id"
               @dragenter="handleDragEnter(button)"
               @dragover="handleDragOver"
@@ -97,7 +110,7 @@ const isDragOver = (id: number) => dragOverButton.value?.id === id && draggedBut
               ]"
             >
               <GiraffeNumberButton
-                :number="button.value"
+                :number="props.giraffeHeights[index]"
                 :selected="selectedNumber === button.value"
                 @select="handleNumberSelect(button.value)"
                 @dragstart="(e) => handleDragStart(e, button)"
