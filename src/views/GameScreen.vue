@@ -79,7 +79,7 @@ const handleDragGiraffe = (sourceId: string, targetId: string) => {
   const sourceIndex = giraffes.value.findIndex(g => g.id === sourceId)
   const targetIndex = giraffes.value.findIndex(g => g.id === targetId)
   
-  if (sourceIndex !== -1 && targetIndex !== -1) {
+  if (sourceIndex !== -1 && targetIndex !== -1 && sourceIndex !== targetIndex) {
     const temp = giraffes.value[sourceIndex]
     giraffes.value[sourceIndex] = giraffes.value[targetIndex]
     giraffes.value[targetIndex] = temp
