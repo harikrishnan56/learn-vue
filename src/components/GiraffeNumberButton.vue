@@ -29,11 +29,10 @@ function handleDragEnd() {
     @click="emit('select')"
     @dragstart="handleDragStart"
     @dragend="handleDragEnd"
-    :class="[
-      'w-[98px] h-[61px] rounded-[10px] text-xl font-gabarito font-bold transition-all duration-200 cursor-move',
-      'bg-giraffe-fill border border-giraffe-stroke text-giraffe-stroke shadow-button-gray',
-      'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-giraffe-stroke hover:bg-opacity-90'
-    ]"
+    class="w-[98px] h-[61px] rounded-[10px] text-xl font-gabarito font-bold transition-all duration-200 cursor-move
+           bg-giraffe-fill text-giraffe-stroke border border-giraffe-stroke
+           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-giraffe-stroke hover:bg-opacity-90
+           relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-giraffe-stroke after:rounded-b-[10px]"
   >
     {{ number }}
   </button>
