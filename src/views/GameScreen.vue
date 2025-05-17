@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import GameHeader from '../components/GameHeader.vue'
 import GameContent from '../components/GameContent.vue'
@@ -20,20 +20,27 @@ const showFeedback = ref(false)
 const isCorrect = ref(false)
 
 const giraffes = ref<GiraffeData[]>([])
-const selectedNumber = ref<number | null>(null)
+const selectedNumberDisplayValue = ref<number | null>(null)
+
+// Create a computed property to pass to GameControls
+const giraffeControlsData = computed(() => {
+  return giraffes.value.map(g => ({ id: g.id, height: g.height }))
+})
 
 const generateGiraffes = (count = 3) => {
   const newGiraffes: GiraffeData[] = []
-  
-  for (let i = 0; i < count; i++) {
-    const height = Math.floor(Math.random() * 20) + 1
-    
-    newGiraffes.push({
-      id: (i + 1).toString(),
-      height
-    })
+  const usedHeights = new Set<number>()
+  for (let i = 0; i < count; ) {
+    const height = Math.floor(Math.random() * 20) + 5 // Ensure height is at least 5 for visibility
+    if (!usedHeights.has(height)) {
+      usedHeights.add(height)
+      newGiraffes.push({
+        id: `g-${Date.now()}-${i}`, // More unique ID
+        height
+      })
+      i++
+    }
   }
-  
   giraffes.value = newGiraffes
 }
 
@@ -50,23 +57,13 @@ const handleCheck = () => {
   const currentOrder = giraffes.value.map(g => g.height)
   const correctOrder = [...currentOrder].sort((a, b) => a - b)
   
-  const incorrectPositions = currentOrder.reduce((acc, height, index) => {
-    if (height !== correctOrder[index]) {
-      acc.push({
-        position: index + 1,
-        current: height,
-        expected: correctOrder[index]
-      })
-    }
-    return acc
-  }, [] as { position: number; current: number; expected: number }[])
-  
-  isCorrect.value = incorrectPositions.length === 0
+  isCorrect.value = JSON.stringify(currentOrder) === JSON.stringify(correctOrder)
   
   if (isCorrect.value) {
     setTimeout(() => {
       showFeedback.value = false
-      router.push('/game?level=2')
+      // Potentially move to next level or show success
+      generateGiraffes() // For now, just regenerate for a new round
     }, 2000)
   } else {
     setTimeout(() => {
@@ -75,7 +72,8 @@ const handleCheck = () => {
   }
 }
 
-const handleDragGiraffe = (sourceId: string, targetId: string) => {
+// Renamed to handleMoveGiraffe to match emit from GameControls
+const handleMoveGiraffe = (sourceId: string, targetId: string) => {
   const sourceIndex = giraffes.value.findIndex(g => g.id === sourceId)
   const targetIndex = giraffes.value.findIndex(g => g.id === targetId)
   
@@ -86,9 +84,8 @@ const handleDragGiraffe = (sourceId: string, targetId: string) => {
   }
 }
 
-const handleNumberSelect = (value: number) => {
-  selectedNumber.value = value
-  console.log(`Selected number: ${value}`)
+const handleNumberSelect = (displayValue: number) => {
+  selectedNumberDisplayValue.value = displayValue
 }
 
 onMounted(() => {
@@ -115,10 +112,10 @@ onMounted(() => {
     
     <!-- Fixed controls -->
     <GameControls
-      :giraffe-heights="giraffes.map((g: GiraffeData) => g.height)"
+      :giraffe-heights-data="giraffeControlsData"
       @check="handleCheck"
       @selectNumber="handleNumberSelect"
-      @moveGiraffe="handleDragGiraffe"
+      @moveGiraffe="handleMoveGiraffe"
       class="fixed bottom-0 left-0 right-0 z-10"
     />
     

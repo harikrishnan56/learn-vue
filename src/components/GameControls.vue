@@ -1,33 +1,39 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { GripVertical, MoveHorizontal } from 'lucide-vue-next'
+import { ref, watch, computed } from 'vue'
+import { MoveHorizontal } from 'lucide-vue-next'
 import BaseButton from './BaseButton.vue'
 import GiraffeNumberButton from './GiraffeNumberButton.vue'
 
-interface NumberButton {
-  id: number
-  value: number
+interface GiraffeButtonData {
+  id: string
+  displayValue: number 
+  originalIndex: number
 }
 
 interface Props {
-  giraffeHeights: number[]
+  giraffeHeightsData: { id: string; height: number }[]
 }
 
 const props = defineProps<Props>()
 
-const selectedNumber = ref<number | null>(null)
-const buttons = ref<NumberButton[]>([])
+const selectedNumberValue = ref<number | null>(null)
+const localButtons = ref<GiraffeButtonData[]>([])
+
+const draggedButtonId = ref<string | null>(null)
+const dragOverButtonId = ref<string | null>(null)
+const isDragging = ref(false)
 
 watch(
-  () => props.giraffeHeights,
-  (heights) => {
-    buttons.value = heights.map((_, index) => ({ id: index + 1, value: index + 1 }))
+  () => props.giraffeHeightsData,
+  (newGiraffeData) => {
+    localButtons.value = newGiraffeData.map((g, index) => ({
+      id: g.id,
+      displayValue: g.height,
+      originalIndex: index
+    }))
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 )
-
-const draggedButton = ref<NumberButton | null>(null)
-const dragOverButton = ref<NumberButton | null>(null)
 
 const emit = defineEmits<{
   (e: 'check'): void
@@ -39,84 +45,172 @@ function handleCheck() {
   emit('check')
 }
 
-function handleNumberSelect(number: number) {
-  selectedNumber.value = number
-  emit('selectNumber', number)
+function handleNumberSelect(buttonData: GiraffeButtonData) {
+  selectedNumberValue.value = buttonData.displayValue
+  emit('selectNumber', buttonData.displayValue)
 }
 
-function handleDragStart(e: DragEvent, button: NumberButton) {
-  draggedButton.value = button
-  if (e.dataTransfer) {
-    e.dataTransfer.effectAllowed = 'move'
+const getButtonRef = (id: string) => {
+  return document.querySelector(`[data-button-id='${id}']`) as HTMLElement | null;
+}
+
+function applyDragStyles(element: HTMLElement | null) {
+  if (element) {
+    element.style.transform = 'scale(0.95)'
   }
 }
 
-function handleDragEnter(button: NumberButton) {
-  if (draggedButton.value?.id !== button.id) {
-    dragOverButton.value = button
+function clearDragStyles(element: HTMLElement | null) {
+  if (element) {
+    element.style.transform = ''
+    element.style.opacity = '' 
   }
 }
 
-function handleDragOver(e: DragEvent) {
-  e.preventDefault()
+function onDragStart(event: DragEvent | TouchEvent, buttonId: string) {
+  isDragging.value = true
+  draggedButtonId.value = buttonId
+
+  const draggedElementWrapper = getButtonRef(buttonId)
+  if (draggedElementWrapper) {
+    const buttonElement = draggedElementWrapper.querySelector('button');
+    applyDragStyles(buttonElement);
+  }
+
+  if (event instanceof DragEvent && event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', buttonId)
+  }
 }
 
-function handleDrop(e: DragEvent) {
-  e.preventDefault()
-  
-  if (!draggedButton.value || !dragOverButton.value || draggedButton.value.id === dragOverButton.value.id) {
+function onDragEnter(buttonId: string) {
+  if (!draggedButtonId.value || draggedButtonId.value === buttonId) return
+  dragOverButtonId.value = buttonId
+}
+
+function onDragOver(event: DragEvent | TouchEvent) {
+  if (!draggedButtonId.value) return
+  event.preventDefault()
+  if (event instanceof DragEvent && event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move'
+  }
+}
+
+function onDrop(targetButtonId: string) {
+  if (!draggedButtonId.value || !targetButtonId || draggedButtonId.value === targetButtonId) {
+    resetDragState()
     return
   }
-  
-  const draggedIndex = buttons.value.findIndex(b => b.id === draggedButton.value?.id)
-  const dropIndex = buttons.value.findIndex(b => b.id === dragOverButton.value?.id)
-  
-  if (draggedIndex !== -1 && dropIndex !== -1) {
-    const [movedButton] = buttons.value.splice(draggedIndex, 1)
-    buttons.value.splice(dropIndex, 0, movedButton)
-    
-    emit('moveGiraffe', draggedButton.value.id.toString(), dragOverButton.value.id.toString())
+  emit('moveGiraffe', draggedButtonId.value, targetButtonId)
+  resetDragState()
+}
+
+function onDragEnd() {
+  const draggedElementWrapper = getButtonRef(draggedButtonId.value || '')
+  if (draggedElementWrapper) {
+    const buttonElement = draggedElementWrapper.querySelector('button');
+    clearDragStyles(buttonElement);
   }
+  resetDragState()
+}
+
+function resetDragState() {
+  isDragging.value = false
+  draggedButtonId.value = null
+  dragOverButtonId.value = null
+}
+
+let currentTouchTargetId: string | null = null;
+
+function onTouchStart(event: TouchEvent, buttonId: string) {
+  onDragStart(event, buttonId)
+}
+
+function onTouchMove(event: TouchEvent) {
+  if (!isDragging.value || !draggedButtonId.value) return
+  event.preventDefault()
+  const touch = event.touches[0]
+  const elementOver = document.elementFromPoint(touch.clientX, touch.clientY)
   
-  draggedButton.value = null
-  dragOverButton.value = null
+  if (elementOver) {
+    const buttonWrapper = elementOver.closest('[data-button-id]')
+    if (buttonWrapper) {
+      const targetId = buttonWrapper.getAttribute('data-button-id')
+      if (targetId && targetId !== draggedButtonId.value) {
+        dragOverButtonId.value = targetId
+        currentTouchTargetId = targetId
+      } else if (targetId === draggedButtonId.value) {
+        dragOverButtonId.value = null 
+        currentTouchTargetId = null
+      }
+    } else {
+       dragOverButtonId.value = null
+       currentTouchTargetId = null
+    }
+  } else {
+    dragOverButtonId.value = null
+    currentTouchTargetId = null
+  }
 }
 
-function handleDragEnd() {
-  draggedButton.value = null
-  dragOverButton.value = null
+function onTouchEnd() {
+  const draggedElementWrapper = getButtonRef(draggedButtonId.value || '')
+  if (draggedElementWrapper) {
+    const buttonElement = draggedElementWrapper.querySelector('button');
+    clearDragStyles(buttonElement);
+  }
+
+  if (draggedButtonId.value && currentTouchTargetId && draggedButtonId.value !== currentTouchTargetId) {
+    onDrop(currentTouchTargetId)
+  }
+  resetDragState()
+  currentTouchTargetId = null
 }
 
-const isDragOver = (id: number) => dragOverButton.value?.id === id && draggedButton.value?.id !== id
+const getDisplayNumber = (button: GiraffeButtonData) => {
+  const giraffeData = props.giraffeHeightsData.find(g => g.id === button.id);
+  return giraffeData ? giraffeData.height : button.displayValue;
+}
+
 </script>
 
 <template>
   <div class="fixed bottom-0 left-0 right-0">
     <div class="w-full h-2 bg-brand-green-strip"></div>
-    <div class="bg-brand-green-light p-4 min-h-[238px] flex flex-col justify-center">
+    <div class="bg-brand-green-light p-4 min-h-[238px] flex flex-col justify-center" 
+         @touchmove.prevent="onTouchMove" 
+         @touchend.prevent="onTouchEnd"
+    >
       <div class="container mx-auto px-4">
         <div class="flex flex-col items-center gap-4 w-full sm:max-w-[360px] mx-auto">
           <div class="flex justify-center gap-2 md:gap-4 w-full mb-4">
             <div
-              v-for="(button, index) in buttons"
+              v-for="button in localButtons"
               :key="button.id"
-              @dragenter="handleDragEnter(button)"
-              @dragover="handleDragOver"
-              @drop="handleDrop"
-              class="flex flex-col gap-2 items-center"
+              :data-button-id="button.id" 
+              @dragenter.prevent="onDragEnter(button.id)"
+              @dragover.prevent="onDragOver"
+              @drop.prevent="onDrop(button.id)"
+              class="flex flex-col gap-1 items-center relative"
               :class="[
-                'transform transition-transform duration-200',
-                isDragOver(button.id) ? 'translate-y-2' : ''
+                'transform transition-all duration-150',
+                {
+                  'scale-110': dragOverButtonId === button.id && draggedButtonId !== button.id,
+                }
               ]"
             >
               <GiraffeNumberButton
-                :number="props.giraffeHeights[index]"
-                :selected="selectedNumber === button.value"
-                @select="handleNumberSelect(button.value)"
-                @dragstart="(e) => handleDragStart(e, button)"
-                @dragend="handleDragEnd"
+                :number="getDisplayNumber(button)" 
+                :selected="selectedNumberValue === getDisplayNumber(button)"
+                @select="handleNumberSelect(button)"
+                @dragstart="(e) => onDragStart(e, button.id)"
+                @dragend="onDragEnd"
+                @touchstart.stop="(e) => onTouchStart(e, button.id)"
               />
-              <MoveHorizontal class="w-5 h-5 text-giraffe-stroke" />
+              <MoveHorizontal 
+                class="w-5 h-5 text-giraffe-stroke transition-opacity duration-200"
+                :class="{ 'opacity-30': isDragging && draggedButtonId !== button.id, 'opacity-100': !isDragging }"
+              />
             </div>
           </div>
           <div class="w-full">
@@ -124,6 +218,7 @@ const isDragOver = (id: number) => dragOverButton.value?.id === id && draggedBut
               label="Let's Check!" 
               variant="secondary"
               width="w-full"
+              :disabled="isDragging"
               @click="handleCheck"
             />
           </div>
