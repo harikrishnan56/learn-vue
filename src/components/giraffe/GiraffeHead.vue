@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import happySvg from '@/assets/images/giraffe-happy.svg'
 import confusedSvg from '@/assets/images/giraffe-confused.svg'
 import idleSvg from '@/assets/images/giraffe-idle.svg'
@@ -17,7 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const images = { happy: happySvg, confused: confusedSvg, idle: idleSvg, sad: sadSvg }
-const imagePath = images[props.mood]
+const imagePath = computed(() => images[props.mood])
 </script>
 
 <template>

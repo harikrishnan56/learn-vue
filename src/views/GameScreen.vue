@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import GameHeader from '../components/GameHeader.vue'
 import GameContent from '../components/GameContent.vue'
 import GameControls from '../components/GameControls.vue'
+import FeedbackOverlay from '../components/FeedbackOverlay.vue'
 
 interface GiraffeData {
   id: string
@@ -25,6 +26,7 @@ const giraffes = ref<GiraffeData[]>([])
 const selectedNumberDisplayValue = ref<number | null>(null)
 
 const showSpeechBubblesGlobal = ref(false)
+const showResultOverlay = ref(false)
 const giraffeDisplayStates = ref<GiraffeDisplayState[]>([])
 
 const giraffeControlsData = computed(() => {
@@ -113,8 +115,8 @@ const handleCheck = () => {
 
   if (isOverallCorrect.value) {
     setTimeout(() => {
-      generateGiraffes()
-    }, 2000)
+      showResultOverlay.value = true
+    }, 1500)
   }
 }
 
@@ -133,6 +135,12 @@ const handleMoveGiraffe = (sourceId: string, targetId: string) => {
 
 const handleNumberSelect = (displayValue: number) => {
   selectedNumberDisplayValue.value = displayValue
+}
+
+function onContinue() {
+  showResultOverlay.value = false
+  generateGiraffes()
+  showSpeechBubblesGlobal.value = false
 }
 
 onMounted(() => {
@@ -165,5 +173,6 @@ onMounted(() => {
       @moveGiraffe="handleMoveGiraffe"
       class="fixed bottom-0 left-0 right-0 z-10"
     />
+    <FeedbackOverlay :visible="showResultOverlay" @continue="onContinue" />
   </div>
 </template> 
