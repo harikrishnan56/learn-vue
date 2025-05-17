@@ -1,24 +1,33 @@
 <template>
   <transition name="slide">
     <div v-if="visible" class="fixed inset-0 bg-black/50 z-50">
-      <div class="absolute left-0 right-0 bottom-0 mb-4 mx-auto bg-[#3A8737] text-white p-8 rounded-t-2xl w-11/12 max-w-md">
-        <h2 class="text-3xl font-gabarito font-normal mb-2">Awesome!</h2>
-        <p class="text-lg mb-6">The giraffes are now in order.</p>
-        <BaseButton label="Continue" variant="secondary" @click="onContinue" />
+      <div
+        class="absolute left-0 right-0 bottom-0 mb-4 mx-auto bg-[#3A8737] text-white p-8 rounded-t-2xl w-11/12 max-w-md flex flex-col items-center"
+        :style="{ backgroundColor: bgColor }"
+      >
+        <h2 class="text-3xl font-gabarito font-normal mb-2">{{ title }}</h2>
+        <p class="text-lg mb-6">{{ message }}</p>
+        <BaseButton :label="buttonLabel" variant="secondary" @click="onContinue" />
       </div>
     </div>
   </transition>
 </template>
 
 <script setup lang="ts">
-import { defineEmits, defineProps } from 'vue'
+import { computed } from 'vue'
 import BaseButton from './BaseButton.vue'
 
 interface Props {
   visible: boolean
+  type?: 'success' | 'error'
 }
 
-defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), { type: 'success' })
+
+const title = computed(() => props.type === 'success' ? 'Awesome!' : 'Oh no!')
+const message = computed(() => props.type === 'success' ? 'The giraffes are now in order.' : 'The giraffes are still mixed up!')
+const buttonLabel = computed(() => props.type === 'success' ? 'Continue' : 'Try Again')
+const bgColor = computed(() => props.type === 'success' ? '#3A8737' : '#C24545')
 
 const emit = defineEmits<{
   (e: 'continue'): void
