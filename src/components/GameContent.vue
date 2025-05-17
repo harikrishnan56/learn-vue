@@ -29,7 +29,7 @@ const getGiraffeScale = (height: number) => {
 <template>
   <main class="container mx-auto px-4 flex flex-col h-full">
     <div class="text-center mb-4">
-      <h2 class="text-xl font-gabarito font-normal text-brand-blue">Order the giraffes based on their height</h2>
+      <h2 class="text-xl font-gabarito font-normal text-brand-blue">Order the giraffes from shortest to tallest</h2>
     </div>
     
     <div class="flex justify-around items-end w-full mx-auto max-w-xl mt-auto">

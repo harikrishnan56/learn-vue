@@ -47,9 +47,8 @@ const handleSettings = () => {
 
 const handleCheck = () => {
   showFeedback.value = true
-  
   const currentOrder = giraffes.value.map(g => g.height)
-  const correctOrder = [...currentOrder].sort((a, b) => b - a)
+  const correctOrder = [...currentOrder].sort((a, b) => a - b)
   
   const incorrectPositions = currentOrder.reduce((acc, height, index) => {
     if (height !== correctOrder[index]) {
@@ -80,7 +79,20 @@ const handleDragGiraffe = (sourceId: string, targetId: string) => {
   const sourceIndex = giraffes.value.findIndex(g => g.id === sourceId)
   const targetIndex = giraffes.value.findIndex(g => g.id === targetId)
   
-  if (sourceIndex !== -1 && targetIndex !== -1) {
+  // Prevent dragging leftmost giraffe to the left of itself or rightmost to the right of itself
+  if (sourceIndex !== -1 && targetIndex !== -1 && sourceIndex !== targetIndex) {
+    // Calculate the effective new position - prevent rotating from first to last or last to first
+    if (sourceIndex === 0 && targetIndex === giraffes.value.length - 1) {
+      // Don't allow leftmost giraffe to move to rightmost position
+      return;
+    }
+    
+    if (sourceIndex === giraffes.value.length - 1 && targetIndex === 0) {
+      // Don't allow rightmost giraffe to move to leftmost position
+      return;
+    }
+    
+    // Move only if it's a valid move
     const [movedItem] = giraffes.value.splice(sourceIndex, 1)
     giraffes.value.splice(targetIndex, 0, movedItem)
   }
