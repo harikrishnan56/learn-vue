@@ -31,6 +31,8 @@ export default {
       boxShadow: {
         'button-gray': '0px 3px 0px 0px rgba(228, 228, 228, 1)',
         'button-teal': '0px 3px 0px 0px rgba(37, 164, 159, 1)',
+        'button-giraffe': '0px 3px 0px 0px rgba(58, 135, 55, 1)',
+        'button-circle': '0px 0px 0px 4px rgba(58, 135, 55, 0.1)'
       }
     },
   },

@@ -30,9 +30,9 @@ function handleDragEnd() {
     @dragstart="handleDragStart"
     @dragend="handleDragEnd"
     class="w-[98px] h-[61px] rounded-[10px] text-xl font-gabarito font-bold transition-all duration-200 cursor-move
-           bg-giraffe-fill text-giraffe-stroke border border-giraffe-stroke
+           bg-giraffe-fill text-giraffe-stroke border border-giraffe-stroke shadow-button-giraffe
            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-giraffe-stroke hover:bg-opacity-90
-           relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-giraffe-stroke after:rounded-b-[10px]"
+           flex items-center justify-center"
   >
     {{ number }}
   </button>
