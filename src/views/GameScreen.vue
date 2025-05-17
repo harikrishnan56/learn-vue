@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import GameHeader from '../components/GameHeader.vue'
 import GameContent from '../components/GameContent.vue'
@@ -17,7 +17,6 @@ const handleCountdownComplete = () => {
 }
 
 const handlePause = () => {
-  // TODO: Implement pause functionality
   console.log('Game paused')
 }
 
@@ -26,25 +25,21 @@ const handleSettings = () => {
 }
 
 const handlePreview = () => {
-  // TODO: Implement preview functionality
   console.log('Preview clicked')
 }
 
 const handleSave = () => {
-  // TODO: Implement save functionality
   console.log('Save clicked')
 }
 </script>
 
 <template>
   <div class="min-h-screen bg-brand-white">
-    <!-- Countdown and objective overlay -->
     <CountdownOverlay
       :is-visible="isCountdownVisible"
       @countdown-complete="handleCountdownComplete"
     />
     
-    <!-- Game content -->
     <div v-if="showGameContent" class="min-h-screen pb-[76px] pt-[76px]">
       <GameHeader 
         :objective="objective"
