@@ -163,7 +163,7 @@ onMounted(() => {
     <div class="pt-[76px]">
       <GameContent 
         :giraffes="gameContentData"
-        class="pb-0 h-[calc(100vh-316px)]"
+        class="pb-0 h-[calc(100vh-348px)]"
       />
     </div>
     
