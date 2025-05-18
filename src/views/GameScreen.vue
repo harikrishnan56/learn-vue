@@ -187,7 +187,7 @@ onMounted(() => {
     <CountdownOverlay
       :is-visible="showSecondaryObjective"
       :objective-text="secondaryObjectiveText"
-      @countdownComplete="handleSecondaryComplete"
+      @countdown-complete="handleSecondaryComplete"
     />
   </div>
 </template> 
