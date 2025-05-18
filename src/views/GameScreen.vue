@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import GameHeader from '../components/GameHeader.vue'
 import GameContent from '../components/GameContent.vue'
@@ -26,18 +26,14 @@ interface NumberedGiraffeData {
 }
 
 const router = useRouter()
-
 const gameMode = ref<'orderByHeight' | 'findMissingNumber'>('orderByHeight')
 const showGameContent = ref(true)
-
 const isOverallCorrect = ref(false)
-
 const giraffes = ref<GiraffeData[]>([])
 const selectedNumberDisplayValue = ref<number | null>(null)
-
 const showSpeechBubblesGlobal = ref(false)
 const showResultOverlay = ref(false)
-const overlayType = ref<'success'|'error'>('success')
+const overlayType = ref<'success' | 'error'>('success')
 const giraffeDisplayStates = ref<GiraffeDisplayState[]>([])
 const showSecondaryObjective = ref(false)
 const secondaryObjectiveText = ref('New giraffe has joined the line!')
@@ -49,6 +45,19 @@ const missingNumberGiraffes = ref<NumberedGiraffeData[]>([])
 const missingNumberOptions = ref<number[]>([])
 const correctMissingNumber = ref<number | null>(null)
 const giraffesVisible = ref<boolean[]>([])
+
+// State for orderByHeight animation sequence
+const objectiveTextAnimatingUp = ref(false)
+const showHeaderElements = ref(false)
+const showGrassAndControlsShell = ref(false) // For GameControls main visibility (grass bg)
+const giraffesOrderVisible = ref<boolean[]>([]) // For orderByHeight giraffes slide-in
+const showOrderButtons = ref(false) // For buttons inside GameControls in orderByHeight
+const initialOrderByHeightAnimationComplete = ref(false)
+
+const findNumObjectiveAnimatingUp = ref(false)
+const initialFindNumAnimationComplete = ref(false)
+
+const showFindNumControlsShell = ref(false) // For GameControls background in findMissingNumber mode
 
 const giraffeControlsData = computed(() => {
   return giraffes.value.map(g => ({ id: g.id, height: g.height }))
@@ -87,15 +96,184 @@ const generateGiraffes = (count = 3) => {
     currentMood: 'happy'
   }))
   showSpeechBubblesGlobal.value = false
+  // Initialize visibility for orderByHeight mode when giraffes are generated
+  if (gameMode.value === 'orderByHeight') {
+    giraffesOrderVisible.value = new Array(newGiraffes.length).fill(false)
+  }
 }
 
-const handlePause = () => {
-  console.log('Game paused')
+const resetOrderByHeightAnimationState = () => {
+  objectiveTextAnimatingUp.value = false
+  showHeaderElements.value = false
+  showGrassAndControlsShell.value = false
+  giraffesOrderVisible.value = new Array(giraffes.value.length).fill(false)
+  showOrderButtons.value = false
+  initialOrderByHeightAnimationComplete.value = false
 }
 
-const handleSettings = () => {
-  router.push('/settings')
+const startOrderByHeightAnimation = () => {
+  if (initialOrderByHeightAnimationComplete.value) {
+    return
+  }
+
+  if (giraffes.value.length === 0) {
+    generateGiraffes()
+  }
+  if (giraffesOrderVisible.value.length !== giraffes.value.length) {
+    giraffesOrderVisible.value = new Array(giraffes.value.length).fill(false);
+  }
+
+  objectiveTextAnimatingUp.value = false 
+  showHeaderElements.value = false
+  showGrassAndControlsShell.value = false
+  showOrderButtons.value = false
+  for(let i = 0; i < giraffesOrderVisible.value.length; i++) giraffesOrderVisible.value[i] = false;
+
+  setTimeout(() => {
+    objectiveTextAnimatingUp.value = true
+    showHeaderElements.value = true
+    showGrassAndControlsShell.value = true
+
+    setTimeout(() => {
+      if (giraffes.value.length > 0) {
+        for (let i = 0; i < giraffes.value.length; i++) {
+          setTimeout(() => {
+            if (i < giraffesOrderVisible.value.length) {
+              giraffesOrderVisible.value[i] = true
+            }
+            if (i === giraffes.value.length - 1) {
+              setTimeout(() => {
+                showOrderButtons.value = true
+                initialOrderByHeightAnimationComplete.value = true 
+              }, 500 + 100)
+            }
+          }, i * 300)
+        }
+      } else {
+        showOrderButtons.value = true
+        initialOrderByHeightAnimationComplete.value = true 
+      }
+    }, 1000)
+  }, 1500)
 }
+
+const resetFindMissingNumberAnimationState = () => {
+  findNumObjectiveAnimatingUp.value = false
+  showHeaderElements.value = false 
+  showGrass.value = false
+  showFindNumControlsShell.value = false
+  if (missingNumberGiraffes.value.length > 0) {
+    giraffesVisible.value = new Array(missingNumberGiraffes.value.length).fill(false)
+  } else {
+    giraffesVisible.value = []
+  }
+  showQuestionModal.value = false
+  initialFindNumAnimationComplete.value = false
+}
+
+const generateMissingNumberGiraffes = () => {
+  const baseSequence = [1, 2, 3, 4]
+  const missingIndex = Math.floor(Math.random() * baseSequence.length)
+  const missingValue = baseSequence[missingIndex]
+  correctMissingNumber.value = missingValue
+  
+  const newGiraffes: NumberedGiraffeData[] = []
+  
+  for (let i = 0; i < baseSequence.length; i++) {
+    newGiraffes.push({
+      id: `num-g-${Date.now()}-${i}-${Math.random().toString(36).substring(7)}`,
+      displayValue: i === missingIndex ? '?' : baseSequence[i],
+      height: 100 + (i * 30) // These are different heights than orderByHeight
+    })
+  }
+  
+  missingNumberGiraffes.value = newGiraffes
+  giraffesVisible.value = new Array(newGiraffes.length).fill(false) // Visibility for num-giraffes
+  
+  // Initialize giraffe display states for the new missing number giraffes
+  giraffeDisplayStates.value = newGiraffes.map(g => ({
+    id: g.id,
+    height: g.height,
+    speechText: null,
+    currentMood: 'happy'
+  }))
+  
+  const options = [missingValue]
+  while (options.length < 3) {
+    const option = Math.floor(Math.random() * 9) + 1
+    if (!options.includes(option)) {
+      options.push(option)
+    }
+  }
+  
+  missingNumberOptions.value = options.sort(() => Math.random() - 0.5)
+}
+
+const startFindMissingNumberAnimation = () => {
+  if (initialFindNumAnimationComplete.value) {
+    return;
+  }
+  generateMissingNumberGiraffes() 
+  if (giraffesVisible.value.length !== missingNumberGiraffes.value.length) {
+      giraffesVisible.value = new Array(missingNumberGiraffes.value.length).fill(false);
+  }
+
+  resetFindMissingNumberAnimationState();
+  initialFindNumAnimationComplete.value = false;
+
+  setTimeout(() => { 
+    findNumObjectiveAnimatingUp.value = true; showHeaderElements.value = true; showGrass.value = true; showFindNumControlsShell.value = true;
+    setTimeout(() => {
+      if (missingNumberGiraffes.value.length > 0) {
+        for (let i = 0; i < missingNumberGiraffes.value.length; i++) {
+          setTimeout(() => {
+            if (i < giraffesVisible.value.length) giraffesVisible.value[i] = true
+            if (i === missingNumberGiraffes.value.length - 1) {
+              setTimeout(() => {
+                showQuestionModal.value = true;
+                initialFindNumAnimationComplete.value = true;
+                giraffeDisplayStates.value = missingNumberGiraffes.value.map(g => ({ id: g.id, height: g.height, speechText: String(g.displayValue), currentMood: 'happy' }));
+                showSpeechBubblesGlobal.value = true;
+              }, 600)
+            }
+          }, i * 300)
+        }
+      } else {
+        showQuestionModal.value = true; initialFindNumAnimationComplete.value = true
+      }
+    }, 1000)
+  }, 1500)
+}
+
+watch(giraffes, (newGiraffesValue) => {
+  if (gameMode.value === 'orderByHeight') {
+    if (newGiraffesValue && newGiraffesValue.length > 0) {
+      if (giraffesOrderVisible.value.length !== newGiraffesValue.length) {
+        giraffesOrderVisible.value = new Array(newGiraffesValue.length).fill(false);
+      }
+      startOrderByHeightAnimation()
+    } else {
+      resetOrderByHeightAnimationState()
+    }
+  }
+}, { deep: true });
+
+watch(gameMode, (newMode) => {
+  resetOrderByHeightAnimationState(); resetFindMissingNumberAnimationState();
+  if (newMode === 'orderByHeight') {
+    const ensureOrderGiraffes = !giraffes.value.every(g => g.id.startsWith('g-'))
+    if (giraffes.value.length === 0 || ensureOrderGiraffes) {
+      generateGiraffes()
+    } else {
+      startOrderByHeightAnimation()
+    }
+  } else if (newMode === 'findMissingNumber') {
+    startFindMissingNumberAnimation()
+  }
+});
+
+const handlePause = () => console.log('Game paused')
+const handleSettings = () => router.push('/settings')
 
 const handleCheck = () => {
   const currentOrderHeights = giraffes.value.map(g => g.height)
@@ -158,93 +336,95 @@ const handleNumberSelect = (displayValue: number) => {
 function onContinue() {
   showResultOverlay.value = false
   showSpeechBubblesGlobal.value = false
-  if (overlayType.value === 'success') {
-    showSecondaryObjective.value = true
+  
+  if (gameMode.value === 'orderByHeight') {
+    if (overlayType.value === 'success') {
+      showSecondaryObjective.value = true
+    }
+  } else if (gameMode.value === 'findMissingNumber') {
+    if (overlayType.value === 'success') {
+      showQuestionModal.value = false
+      showGrass.value = false
+      gameMode.value = 'orderByHeight'
+    } else {
+      // For error in findMissingNumber, allow another try
+      showQuestionModal.value = true
+    }
   }
 }
 
 function handleSecondaryComplete() {
   showSecondaryObjective.value = false
   gameMode.value = 'findMissingNumber'
-  startFindMissingNumberSequence()
-}
-
-function startFindMissingNumberSequence() {
-  showFindNumberObjectiveText.value = true
-  
-  setTimeout(() => {
-    showFindNumberObjectiveText.value = false
-    showGrass.value = true
-    
-    generateMissingNumberGiraffes()
-    
-    setTimeout(() => {
-      startGiraffeSlideInSequence()
-    }, 1000)
-  }, 1500)
-}
-
-function generateMissingNumberGiraffes() {
-  const baseSequence = [1, 2, 3, 4]
-  const missingIndex = Math.floor(Math.random() * baseSequence.length)
-  const missingValue = baseSequence[missingIndex]
-  correctMissingNumber.value = missingValue
-  
-  const newGiraffes: NumberedGiraffeData[] = []
-  
-  for (let i = 0; i < baseSequence.length; i++) {
-    newGiraffes.push({
-      id: `num-g-${Date.now()}-${i}-${Math.random().toString(36).substring(7)}`,
-      displayValue: i === missingIndex ? '?' : baseSequence[i],
-      height: 100 + (i * 30)
-    })
-  }
-  
-  missingNumberGiraffes.value = newGiraffes
-  giraffesVisible.value = new Array(newGiraffes.length).fill(false)
-  
-  const options = [missingValue]
-  while (options.length < 3) {
-    const option = Math.floor(Math.random() * 9) + 1
-    if (!options.includes(option)) {
-      options.push(option)
-    }
-  }
-  
-  missingNumberOptions.value = options.sort(() => Math.random() - 0.5)
-}
-
-function startGiraffeSlideInSequence() {
-  for (let i = 0; i < missingNumberGiraffes.value.length; i++) {
-    setTimeout(() => {
-      giraffesVisible.value[i] = true
-      
-      if (i === missingNumberGiraffes.value.length - 1) {
-        setTimeout(() => {
-          showQuestionModal.value = true
-        }, 1500)
-      }
-    }, i * 300)
-  }
 }
 
 function handleMissingNumberSelect(selectedNumber: number) {
-  if (selectedNumber === correctMissingNumber.value) {
-    overlayType.value = 'success'
-  } else {
-    overlayType.value = 'error'
-  }
-  
+  const isCorrect = selectedNumber === correctMissingNumber.value
+  showQuestionModal.value = false
+  // phase 1: show numbers
+  giraffeDisplayStates.value = missingNumberGiraffes.value.map(giraffe => ({
+    id: giraffe.id,
+    height: giraffe.height,
+    speechText: String(giraffe.displayValue === '?' ? selectedNumber : giraffe.displayValue),
+    currentMood: 'happy'
+  }))
+  showSpeechBubblesGlobal.value = true
+  // after showing numbers, fade out
   setTimeout(() => {
-    showQuestionModal.value = false
-    showGrass.value = false
-    gameMode.value = 'orderByHeight'
-    generateGiraffes()
-  }, 1500)
+    showSpeechBubblesGlobal.value = false
+    // after fade out, show definitions
+    setTimeout(() => {
+      giraffeDisplayStates.value = missingNumberGiraffes.value.map((giraffe, index) => {
+        let text = ''
+        let mood: 'happy' | 'confused' | 'idle' | 'sad' = 'happy'
+        if (isCorrect) {
+          const total = missingNumberGiraffes.value.length
+          if (index === 0) {
+            text = "I'm the shortest"
+          } else if (index === total - 1) {
+            text = "I'm the tallest!"
+          } else if (index === 1) {
+            const firstValue = missingNumberGiraffes.value[0].displayValue
+            text = `I'm taller than ${firstValue}`
+          } else if (index === total - 2) {
+            const prev = missingNumberGiraffes.value[index - 1].displayValue
+            const next = missingNumberGiraffes.value[index + 1].displayValue
+            text = `I'm between ${prev} & ${next}`
+          }
+          mood = 'happy'
+        } else {
+          text = giraffe.displayValue === '?' ? "That's not right!" : "Try again!"
+          mood = giraffe.displayValue === '?' ? 'sad' : 'confused'
+        }
+        return { id: giraffe.id, height: giraffe.height, speechText: text, currentMood: mood }
+      })
+      showSpeechBubblesGlobal.value = true
+      // after definitions show, show overlay
+      setTimeout(() => {
+        overlayType.value = isCorrect ? 'success' : 'error'
+        showResultOverlay.value = true
+      }, 1500)
+    }, 500)
+  }, 1000)
+}
+
+function getGiraffeMood(id: string): 'happy' | 'confused' | 'idle' | 'sad' {
+  const displayState = giraffeDisplayStates.value.find(s => s.id === id)
+  return displayState?.currentMood || 'happy'
+}
+
+function getGiraffeSpeechText(id: string): string | null {
+  const displayState = giraffeDisplayStates.value.find(s => s.id === id)
+  return displayState?.speechText || null
 }
 
 onMounted(() => {
-  generateGiraffes()
+  resetOrderByHeightAnimationState(); resetFindMissingNumberAnimationState();
+  if (gameMode.value === 'orderByHeight') {
+    if (giraffes.value.length === 0) generateGiraffes(); else startOrderByHeightAnimation();
+  } else if (gameMode.value === 'findMissingNumber') {
+    startFindMissingNumberAnimation();
+  }
 })
 </script>
 
@@ -254,17 +434,21 @@ onMounted(() => {
       @pause="handlePause"
       @settings="handleSettings"
       class="fixed top-0 left-0 right-0 z-10"
+      :visible="showHeaderElements || gameMode !== 'orderByHeight'"
     />
     
     <div v-if="gameMode === 'orderByHeight'" class="absolute top-[76px] bottom-0 left-0 right-0">
       <GameContent
         :giraffes="gameContentData"
         class="h-full pb-[278px]"
+        :animate-objective-up="objectiveTextAnimatingUp"
+        :giraffes-visible="giraffesOrderVisible"
       />
     </div>
     
     <div v-if="gameMode === 'findMissingNumber'" class="pt-[76px] h-[calc(100vh-76px)] relative">
-      <div v-if="showFindNumberObjectiveText" class="absolute inset-0 flex items-center justify-center">
+      <div v-if="!findNumObjectiveAnimatingUp" class="absolute inset-0 flex items-center justify-center transition-all duration-500 ease-out"
+           :class="{ '-translate-y-20 opacity-0': findNumObjectiveAnimatingUp }" >
         <p class="text-lg font-gabarito font-medium text-brand-blue text-center">Find the missing number for the new giraffe</p>
       </div>
       
@@ -278,15 +462,18 @@ onMounted(() => {
             :height="giraffe.height"
             :head-size="60"
             :body-width="40"
-            :display-number="giraffe.displayValue"
-            :show-number="true"
             :visible="giraffesVisible[index]"
-            mood="happy"
+            :mood="getGiraffeMood(giraffe.id)"
+            :speech-text="getGiraffeSpeechText(giraffe.id)"
+            :show-speech-bubble="showSpeechBubblesGlobal"
+            :multi-line="missingNumberGiraffes.length > 3"
           />
         </div>
       </div>
       
-      <div v-if="showGrass" class="absolute bottom-0 left-0 right-0 h-20 bg-brand-green-light z-10"></div>
+      <Transition name="fade">
+        <div v-if="showGrass" class="absolute bottom-0 left-0 right-0 h-20 bg-brand-green-light z-0"></div>
+      </Transition>
     </div>
     
     <GameControls
@@ -296,15 +483,19 @@ onMounted(() => {
       @selectNumber="handleNumberSelect"
       @moveGiraffe="handleMoveGiraffe"
       class="fixed bottom-0 left-0 right-0 z-10"
+      :controls-visible="showGrassAndControlsShell" 
+      :buttons-visible="showOrderButtons"
     />
     
-    <QuestionModal
-      :visible="showQuestionModal"
-      :options="missingNumberOptions"
-      @select="handleMissingNumberSelect"
-    />
+    <!-- Container for GameControls (shell) and QuestionModal in findMissingNumber mode -->
+    <div v-if="gameMode === 'findMissingNumber'" class="fixed bottom-0 left-0 right-0 z-10">
+      <GameControls :controls-visible="showFindNumControlsShell" :show-interactive-content="false" />
+      <div class="absolute bottom-0 left-0 right-0">
+        <QuestionModal :visible="showQuestionModal" :options="missingNumberOptions" @select="handleMissingNumberSelect" class="w-full" />
+      </div>
+    </div>
     
-    <FeedbackOverlay :visible="showResultOverlay" :type="overlayType" @continue="onContinue" />
+    <FeedbackOverlay :visible="showResultOverlay" :type="overlayType" :game-mode="gameMode" @continue="onContinue" />
     <CountdownOverlay
       :is-visible="showSecondaryObjective"
       :objective-text="secondaryObjectiveText"

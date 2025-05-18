@@ -36,7 +36,7 @@ const patternPositions = Array.from({ length: spotCount() }, (_, i) => {
     class="relative overflow-hidden"
     :style="{ 
       width: `${width}px`, 
-      height: `${height * 0.7}px`,
+      height: `${height}px`,
       borderRadius: `${width / 2}px ${width / 2}px 0 0`,
       backgroundColor: '#EFBA4C'
     }"

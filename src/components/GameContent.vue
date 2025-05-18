@@ -10,8 +10,10 @@ interface GiraffeGameData {
   showSpeechBubble: boolean
 }
 
-const props = defineProps<{ 
-  giraffes: GiraffeGameData[] 
+const props = defineProps<{
+  giraffes: GiraffeGameData[]
+  animateObjectiveUp?: boolean
+  giraffesVisible?: boolean[]
 }>()
 
 const heights = computed(() => props.giraffes.map(g => g.height))
@@ -34,13 +36,16 @@ const getGiraffeHeight = (height: number) => {
 
 <template>
   <main class="container mx-auto px-4 flex flex-col h-full">
-    <div class="text-center mb-4">
+    <div
+      class="text-center mb-4 transition-all duration-500 ease-out"
+      :class="{ '-translate-y-20 opacity-0': animateObjectiveUp }"
+    >
       <h2 class="text-xl font-gabarito font-normal text-brand-blue">Order the giraffes based on their height</h2>
     </div>
     
     <div class="flex justify-around items-end w-full mx-auto max-w-xl mt-auto">
       <div 
-        v-for="giraffe in props.giraffes" 
+        v-for="(giraffe, index) in props.giraffes" 
         :key="giraffe.id" 
         class="flex flex-col items-center" 
       >
@@ -52,6 +57,7 @@ const getGiraffeHeight = (height: number) => {
           :mood="giraffe.currentMood"
           :speech-text="giraffe.speechText"
           :show-speech-bubble="giraffe.showSpeechBubble"
+          :visible="props.giraffesVisible ? props.giraffesVisible[index] : true"
         />
       </div>
     </div>

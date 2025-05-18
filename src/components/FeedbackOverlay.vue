@@ -2,7 +2,7 @@
   <transition name="slide">
     <div v-if="visible" class="fixed inset-0 bg-black/50 z-50">
       <div
-        class="absolute left-0 right-0 bottom-0 mb-4 mx-auto bg-[#3A8737] text-white p-8 rounded-t-2xl w-11/12 max-w-md flex flex-col items-center"
+        class="absolute left-0 right-0 bottom-0 mb-4 mx-auto bg-[#3A8737] text-white p-8 rounded-t-2xl w-full flex flex-col items-center"
         :style="{ backgroundColor: bgColor }"
       >
         <h2 class="text-3xl font-gabarito font-normal mb-2">{{ title }}</h2>
@@ -20,12 +20,28 @@ import BaseButton from './BaseButton.vue'
 interface Props {
   visible: boolean
   type?: 'success' | 'error'
+  gameMode?: 'orderByHeight' | 'findMissingNumber'
 }
 
-const props = withDefaults(defineProps<Props>(), { type: 'success' })
+const props = withDefaults(defineProps<Props>(), { 
+  type: 'success',
+  gameMode: 'orderByHeight'
+})
 
 const title = computed(() => props.type === 'success' ? 'Awesome!' : 'Oh no!')
-const message = computed(() => props.type === 'success' ? 'The giraffes are now in order.' : 'The giraffes are still mixed up!')
+
+const message = computed(() => {
+  if (props.type === 'success') {
+    return props.gameMode === 'orderByHeight' 
+      ? 'The giraffes are now in order.'
+      : 'You found the correct number!'
+  } else {
+    return props.gameMode === 'orderByHeight'
+      ? 'The giraffes are still mixed up!'
+      : 'That\'s not the right number. Try again!'
+  }
+})
+
 const buttonLabel = computed(() => props.type === 'success' ? 'Continue' : 'Try Again')
 const bgColor = computed(() => props.type === 'success' ? '#3A8737' : '#C24545')
 

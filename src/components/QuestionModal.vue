@@ -18,31 +18,38 @@ function handleSelect(value: number) {
 </script>
 
 <template>
-  <transition name="slide-up">
+  <Transition name="fade">
     <div
       v-if="props.visible"
-      class="fixed bottom-0 left-0 right-0 z-50"
+      class="bg-giraffe-stroke text-white p-6 sm:p-12 rounded-t-2xl w-full flex flex-col items-center shadow-xl"
     >
-      <div
-        class="bg-giraffe-stroke text-white p-4 sm:p-6 rounded-t-2xl w-full flex flex-col items-center shadow-xl"
-      >
-        <h2 class="text-xl sm:text-2xl font-gabarito font-semibold mb-4 text-center">
-          What should be the number for the new giraffe?
-        </h2>
-        <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
-          <GiraffeNumberButton
-            v-for="option in props.options"
-            :key="option"
-            :number="option"
-            @select="handleSelect(option)"
-          />
-        </div>
+      <h2 class="text-xl sm:text-2xl font-gabarito font-semibold mb-4 text-center">
+        What should be the number for the new giraffe?
+      </h2>
+      <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
+        <GiraffeNumberButton
+          v-for="option in props.options"
+          :key="option"
+          :number="option"
+          @select="handleSelect(option)"
+        />
       </div>
     </div>
-  </transition>
+  </Transition>
 </template>
 
 <style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Keep slide-up if needed elsewhere, but not used by this component's root anymore */
 .slide-up-enter-active,
 .slide-up-leave-active {
   transition: transform 0.3s ease-out;
