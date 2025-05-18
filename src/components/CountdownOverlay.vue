@@ -4,9 +4,12 @@ import BluepetIcon from './icons/BluepetIcon.vue'
 
 interface Props {
   isVisible: boolean
+  objectiveText?: string
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  objectiveText: 'Order the giraffes based on their Height'
+})
 const emit = defineEmits<{
   (e: 'countdownComplete'): void
 }>()
@@ -86,7 +89,7 @@ watch(() => props.isVisible, (newValue) => {
         <path d="M9 9H9.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M15 9H15.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <p class="text-lg font-gabarito font-medium text-brand-blue text-center">Order the giraffes based on their Height</p>
+      <p class="text-lg font-gabarito font-medium text-brand-blue text-center">{{ props.objectiveText }}</p>
     </div>
 
   </div>

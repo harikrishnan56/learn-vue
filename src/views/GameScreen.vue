@@ -5,6 +5,7 @@ import GameHeader from '../components/GameHeader.vue'
 import GameContent from '../components/GameContent.vue'
 import GameControls from '../components/GameControls.vue'
 import FeedbackOverlay from '../components/FeedbackOverlay.vue'
+import CountdownOverlay from '../components/CountdownOverlay.vue'
 
 interface GiraffeData {
   id: string
@@ -29,6 +30,8 @@ const showSpeechBubblesGlobal = ref(false)
 const showResultOverlay = ref(false)
 const overlayType = ref<'success'|'error'>('success')
 const giraffeDisplayStates = ref<GiraffeDisplayState[]>([])
+const showSecondaryObjective = ref(false)
+const secondaryObjectiveText = ref('New giraffe has joined the line!')
 
 const giraffeControlsData = computed(() => {
   return giraffes.value.map(g => ({ id: g.id, height: g.height }))
@@ -141,8 +144,13 @@ function onContinue() {
   showResultOverlay.value = false
   showSpeechBubblesGlobal.value = false
   if (overlayType.value === 'success') {
-    generateGiraffes()
+    showSecondaryObjective.value = true
   }
+}
+
+function handleSecondaryComplete() {
+  showSecondaryObjective.value = false
+  generateGiraffes()
 }
 
 onMounted(() => {
@@ -163,7 +171,7 @@ onMounted(() => {
     <div class="pt-[76px]">
       <GameContent 
         :giraffes="gameContentData"
-        class="pb-0 h-[calc(100vh-348px)]"
+        class="pb-0 h-[calc(100vh-320px)]"
       />
     </div>
     
@@ -176,5 +184,10 @@ onMounted(() => {
       class="fixed bottom-0 left-0 right-0 z-10"
     />
     <FeedbackOverlay :visible="showResultOverlay" :type="overlayType" @continue="onContinue" />
+    <CountdownOverlay
+      :is-visible="showSecondaryObjective"
+      :objective-text="secondaryObjectiveText"
+      @countdownComplete="handleSecondaryComplete"
+    />
   </div>
 </template> 
