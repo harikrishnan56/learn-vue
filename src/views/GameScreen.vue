@@ -256,10 +256,10 @@ onMounted(() => {
       class="fixed top-0 left-0 right-0 z-10"
     />
     
-    <div class="pt-[76px]" v-if="gameMode === 'orderByHeight'">
-      <GameContent 
+    <div v-if="gameMode === 'orderByHeight'" class="absolute top-[76px] bottom-0 left-0 right-0">
+      <GameContent
         :giraffes="gameContentData"
-        class="pb-0 h-[calc(100vh-320px)]"
+        class="h-full pb-[278px]"
       />
     </div>
     
