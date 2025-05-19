@@ -20,7 +20,7 @@ import BaseButton from './BaseButton.vue'
 interface Props {
   visible: boolean
   type?: 'success' | 'error'
-  gameMode?: 'orderByHeight' | 'findMissingNumber'
+  gameMode?: 'orderByHeight' | 'findMissingNumber' | 'comparisonQuiz'
 }
 
 const props = withDefaults(defineProps<Props>(), { 
@@ -34,11 +34,15 @@ const message = computed(() => {
   if (props.type === 'success') {
     return props.gameMode === 'orderByHeight' 
       ? 'The giraffes are now in order.'
-      : 'You found the correct number!'
+      : props.gameMode === 'findMissingNumber'
+        ? 'You found the correct number!'
+        : 'You found the correct answer!'
   } else {
     return props.gameMode === 'orderByHeight'
       ? 'The giraffes are still mixed up!'
-      : 'That\'s not the right number. Try again!'
+      : props.gameMode === 'findMissingNumber'
+        ? 'That\'s not the right number. Try again!'
+        : 'That\'s not the right answer. Try again!'
   }
 })
 

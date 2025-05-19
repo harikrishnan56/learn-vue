@@ -3,8 +3,13 @@ import { defineStore } from 'pinia'
 export interface StageTaskDetail {
   id: string
   description: string
-  type?: 'orderByHeight' | 'findMissingNumber' | 'quiz' 
+  type?: 'orderByHeight' | 'findMissingNumber' | 'quiz' | 'comparisonQuiz'
   data?: any 
+}
+
+export interface ComparisonQuizData {
+  questionText: string
+  options: Array<{ id: string, label: string }>
 }
 
 export interface StageTasks {
@@ -30,7 +35,20 @@ export const useGameStore = defineStore('game', {
       2: {
         primary: { id: 's2p1', description: 'Stage 2 - Primary: Order Giraffes (Numbers < 100)', type: 'orderByHeight', data: { rangeMax: 99 } },
         secondary: { id: 's2s1', description: 'Stage 2 - Secondary: Find Missing Number (Numbers < 100)', type: 'findMissingNumber', data: { rangeMax: 99 } },
-        tertiary: { id: 's2t1', description: 'Stage 2 - Tertiary: Advanced Quiz', type: 'quiz', data: { question: "How many neck bones does a giraffe have?" } },
+        tertiary: { 
+          id: 's2t1', 
+          description: 'Stage 2 - Tertiary: Comparison Quiz', 
+          type: 'comparisonQuiz',
+          data: {
+            questionText: "Who is the tallest Giraffe?",
+            options: [
+              { id: 'optA', label: 'A' },
+              { id: 'optB', label: 'B' },
+              { id: 'optC', label: 'C' },
+              { id: 'optD', label: 'D' }
+            ]
+          }
+        },
       },
     },
   }),
