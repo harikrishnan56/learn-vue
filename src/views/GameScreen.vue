@@ -202,11 +202,14 @@ const generateMissingNumberGiraffes = () => {
   missingNumberGiraffes.value = newGiraffes
   giraffesVisible.value = new Array(newGiraffes.length).fill(false)
   giraffeDisplayStates.value = newGiraffes.map(g => ({ id: g.id, height: g.height, speechText: null, currentMood: 'happy' }))
+  const lowerBound = missingIndex > 0 ? baseSequence[missingIndex - 1] : 0
+  const upperBound = missingIndex < sequenceLength - 1 ? baseSequence[missingIndex + 1] : rangeMax + 1
   const options = [missingValue]
   while (options.length < 3) {
-    const option = Math.floor(Math.random() * rangeMax) + 1
-    if (!options.includes(option)) {
-      options.push(option)
+    const candidate = Math.floor(Math.random() * rangeMax) + 1
+    if (options.includes(candidate)) continue
+    if (candidate <= lowerBound || candidate >= upperBound) {
+      options.push(candidate)
     }
   }
   missingNumberOptions.value = options.sort(() => Math.random() - 0.5)
