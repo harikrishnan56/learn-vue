@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import { useGameStore } from '../stores/gameStore'
 import GameHeader from '../components/GameHeader.vue'
 import GameContent from '../components/GameContent.vue'
 import GameControls from '../components/GameControls.vue'
@@ -26,6 +27,12 @@ interface NumberedGiraffeData {
 }
 
 const router = useRouter()
+const route = useRoute()
+const gameStore = useGameStore()
+const stage = computed(() => gameStore.currentStage)
+const stageTasks = computed(() => gameStore.getCurrentStageTasks)
+const stageParam = route.query.stage ? parseInt(route.query.stage as string) : NaN
+if (!isNaN(stageParam)) gameStore.setStage(stageParam)
 const gameMode = ref<'orderByHeight' | 'findMissingNumber'>('orderByHeight')
 const showGameContent = ref(true)
 const isOverallCorrect = ref(false)

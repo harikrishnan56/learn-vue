@@ -20,6 +20,10 @@ function startGame() {
   hidePreview()
   router.push('/game')
 }
+
+function startGameWithStage(stageNumber: number) {
+  router.push({ path: '/game', query: { stage: stageNumber.toString() } })
+}
 </script>
 
 <template>
@@ -30,13 +34,9 @@ function startGame() {
       </div>
       
       <div class="w-full space-y-4">
-        <BaseButton
-          label="Play"
-          variant="primary"
-          width="w-full"
-          @click="showPreview"
-        />
-        
+        <BaseButton label="Play" variant="primary" width="w-full" @click="showPreview" />
+        <BaseButton label="Level 2" variant="secondary" width="w-full" @click="startGameWithStage(2)" />
+        <BaseButton label="Level 3" variant="secondary" width="w-full" @click="startGameWithStage(3)" />
       </div>
     </div>
 

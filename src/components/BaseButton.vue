@@ -16,7 +16,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  (e: 'click'): void
+  (e: 'click'): void,
+  
 }>()
 
 const buttonClasses = computed(() => {
