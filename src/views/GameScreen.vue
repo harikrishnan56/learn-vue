@@ -453,6 +453,8 @@ onMounted(() => {
       @settings="handleSettings"
       class="fixed top-0 left-0 right-0 z-10"
       :visible="showHeaderElements || gameMode !== 'orderByHeight'"
+      :objective-text="gameMode === 'findMissingNumber' ? 'Find the missing number for the new giraffe' : 'Order the giraffes based on their height'"
+      :show-objective="gameMode === 'findMissingNumber' ? findNumObjectiveAnimatingUp : objectiveTextAnimatingUp"
     />
     
     <div v-if="gameMode === 'orderByHeight'" class="absolute top-[76px] bottom-0 left-0 right-0">
