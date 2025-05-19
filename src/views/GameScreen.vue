@@ -367,7 +367,6 @@ function handleSecondaryComplete() {
 function handleMissingNumberSelect(selectedNumber: number) {
   const isCorrect = selectedNumber === correctMissingNumber.value
   showQuestionModal.value = false
-  // phase 1: show numbers
   giraffeDisplayStates.value = missingNumberGiraffes.value.map(giraffe => ({
     id: giraffe.id,
     height: giraffe.height,
@@ -375,16 +374,16 @@ function handleMissingNumberSelect(selectedNumber: number) {
     currentMood: 'happy'
   }))
   showSpeechBubblesGlobal.value = true
-  // after showing numbers, fade out
+
   setTimeout(() => {
     showSpeechBubblesGlobal.value = false
-    // after fade out, show definitions
     setTimeout(() => {
       giraffeDisplayStates.value = missingNumberGiraffes.value.map((giraffe, index) => {
         let text = ''
         let mood: 'happy' | 'confused' | 'idle' | 'sad' = 'happy'
+        const total = missingNumberGiraffes.value.length
+        
         if (isCorrect) {
-          const total = missingNumberGiraffes.value.length
           if (index === 0) {
             text = "I'm the shortest"
           } else if (index === total - 1) {
@@ -399,13 +398,26 @@ function handleMissingNumberSelect(selectedNumber: number) {
           }
           mood = 'happy'
         } else {
-          text = giraffe.displayValue === '?' ? "That's not right!" : "Try again!"
-          mood = giraffe.displayValue === '?' ? 'sad' : 'confused'
+          if (giraffe.displayValue === '?') {
+            const prevGiraffe = index > 0 ? missingNumberGiraffes.value[index - 1] : null
+            const nextGiraffe = index < total - 1 ? missingNumberGiraffes.value[index + 1] : null
+            
+            if (prevGiraffe && nextGiraffe) {
+              text = `I should be between ${prevGiraffe.displayValue} & ${nextGiraffe.displayValue}`
+            } else if (prevGiraffe) {
+              text = `I should be taller than ${prevGiraffe.displayValue}`
+            } else if (nextGiraffe) {
+              text = `I should be shorter than ${nextGiraffe.displayValue}`
+            }
+            mood = 'sad'
+          } else {
+            text = `I'm ${giraffe.displayValue}`
+            mood = 'confused'
+          }
         }
         return { id: giraffe.id, height: giraffe.height, speechText: text, currentMood: mood }
       })
       showSpeechBubblesGlobal.value = true
-      // after definitions show, show overlay
       setTimeout(() => {
         overlayType.value = isCorrect ? 'success' : 'error'
         showResultOverlay.value = true
