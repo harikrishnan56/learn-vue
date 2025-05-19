@@ -18,11 +18,12 @@ export default {
         'brand-blue': '#6BADD7',
         'brand-yellow': '#FFD966',
         'brand-orange': '#FF9A3D',
-        'brand-green-light': '#83CA54',
+        'brand-green-light': '#83CA54', // Figma: #83CA54 (stroke_F11ENF, effect_Z3SLXL)
         'brand-green-dark': '#4CAF50',
         'brand-green-strip': '#4FAB4C',
+        'brand-green-answer': '#77BA40',
         'brand-light-yellow': '#FFF2CC',
-        'giraffe-fill': '#BAEA93',
+        'giraffe-fill': '#BAEA93', 
         'giraffe-stroke': '#3A8737',
       },
       fontFamily: {
@@ -32,7 +33,8 @@ export default {
         'button-gray': '0px 3px 0px 0px rgba(228, 228, 228, 1)',
         'button-teal': '0px 3px 0px 0px rgba(37, 164, 159, 1)',
         'button-giraffe': '0px 3px 0px 0px rgba(58, 135, 55, 1)',
-        'button-circle': '0px 0px 0px 4px rgba(58, 135, 55, 0.1)'
+        'button-circle': '0px 0px 0px 4px rgba(58, 135, 55, 0.1)',
+        'answer-option': '0px 4px 0px 0px #83CA54',
       }
     },
   },

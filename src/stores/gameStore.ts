@@ -37,7 +37,7 @@ export const useGameStore = defineStore('game', {
         secondary: { id: 's2s1', description: 'Stage 2 - Secondary: Find Missing Number (Numbers < 100)', type: 'findMissingNumber', data: { rangeMax: 99 } },
         tertiary: { 
           id: 's2t1', 
-          description: 'Stage 2 - Tertiary: Comparison Quiz', 
+          description: 'Stage 2 - Tertiary: Comparison Quiz',
           type: 'comparisonQuiz',
           data: {
             questionText: "Who is the tallest Giraffe?",

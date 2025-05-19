@@ -25,17 +25,18 @@ function handleSelect(optionId: string) {
   <Transition name="fade">
     <div
       v-if="props.visible"
-      class="bg-giraffe-stroke text-white p-6 sm:p-12 rounded-t-2xl w-full flex flex-col items-center shadow-xl"
+      class="bg-giraffe-stroke text-white p-6 sm:p-12 rounded-2xl w-full flex flex-col items-center shadow-xl"
     >
-      <h2 class="text-xl sm:text-2xl font-gabarito font-semibold mb-4 text-center">
+      <h2 class="text-base font-gabarito font-medium mb-4 text-center">
         {{ questionText }}
       </h2>
       <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
         <button
           v-for="option in props.options"
           :key="option.id"
-          class="bg-white text-giraffe-stroke hover:bg-brand-green-light transition-colors duration-200 
-                 text-xl sm:text-2xl font-gabarito font-semibold rounded-md px-8 py-3 min-w-[80px]"
+          class="bg-white text-brand-green-answer hover:bg-giraffe-fill transition-colors duration-200 
+                 text-3xl font-gabarito font-semibold rounded-xl px-8 py-3 min-w-[80px] 
+                 border border-brand-green-light shadow-answer-option"
           @click="handleSelect(option.id)"
         >
           {{ option.label }}

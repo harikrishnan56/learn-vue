@@ -79,6 +79,7 @@ const showTertiaryQuestionModal = ref<boolean>(false)
 const initialTertiaryQuizAnimationComplete = ref<boolean>(false)
 const showTertiaryGrass = ref<boolean>(false)
 const showTertiaryControlsShell = ref<boolean>(false)
+const tertiaryDisplayHeight = 150
 
 const giraffeControlsData = computed(() => {
   return giraffes.value.map(g => ({ id: g.id, height: g.height }))
@@ -273,6 +274,7 @@ const resetTertiaryQuizAnimationState = () => {
   tertiaryGiraffesVisible.value = new Array(tertiaryQuizGiraffes.value.length).fill(false)
   showTertiaryQuestionModal.value = false
   initialTertiaryQuizAnimationComplete.value = false
+  selectedTertiaryOption.value = null
 }
 
 const generateTertiaryQuizData = () => {
@@ -289,17 +291,18 @@ const generateTertiaryQuizData = () => {
   const usedHeights = new Set<number>()
   
   for (let i = 0; i < giraffeCount; i++) {
-    let height
+    let rawHeight
     do {
-      height = Math.floor(Math.random() * 20) + 5
-    } while (usedHeights.has(height))
+      rawHeight = Math.floor(Math.random() * 20) + 5
+    } while (usedHeights.has(rawHeight))
+    const height = rawHeight * 10
     
-    usedHeights.add(height)
+    usedHeights.add(rawHeight)
     newGiraffes.push({
       id: `tertiary-g-${Date.now()}-${i}-${Math.random().toString(36).substring(7)}`,
       height,
       label: labels[i],
-      speechText: labels[i],
+      speechText: null,
       currentMood: 'happy'
     })
   }
@@ -346,11 +349,11 @@ const startTertiaryQuizAnimation = () => {
             
             if (i === tertiaryQuizGiraffes.value.length - 1) {
               setTimeout(() => {
-                // Show speech bubbles with labels
+                // Show speech bubbles with heights
                 giraffeDisplayStates.value = tertiaryQuizGiraffes.value.map(g => ({
                   id: g.id,
                   height: g.height,
-                  speechText: g.label,
+                  speechText: String(g.height),
                   currentMood: 'happy'
                 }))
                 showSpeechBubblesGlobal.value = true
@@ -474,13 +477,31 @@ function onContinue() {
     if (overlayType.value === 'success') {
       showQuestionModal.value = false
       showGrass.value = false
-      
-      // Check if we should proceed to tertiary task
+
+      // ---- START DEBUG LOGS ----
+      console.log('[DEBUG] In onContinue for findMissingNumber success');
+      console.log('[DEBUG] currentStage (from gameStore):', gameStore.currentStage);
+      console.log('[DEBUG] stage.value (computed):', stage.value);
+      // Use a deep copy for logging complex objects to avoid proxy issues in console
+      try {
+        console.log('[DEBUG] stageTasks.value:', JSON.parse(JSON.stringify(stageTasks.value)));
+        console.log('[DEBUG] stageTasks.value?.tertiary:', JSON.parse(JSON.stringify(stageTasks.value?.tertiary)));
+      } catch (e) {
+        console.error('[DEBUG] Error stringifying stageTasks:', e);
+        console.log('[DEBUG] stageTasks.value (raw):', stageTasks.value);
+      }
+      console.log('[DEBUG] stageTasks.value?.tertiary?.type:', stageTasks.value?.tertiary?.type);
+      // ---- END DEBUG LOGS ----
+
       const hasTertiaryTask = stageTasks.value?.tertiary?.type === 'comparisonQuiz'
-      if (stage.value === 2 && hasTertiaryTask) {
+      console.log('[DEBUG] hasTertiaryTask:', hasTertiaryTask); // Log the result of the check
+
+      if (hasTertiaryTask) {
+        console.log('[DEBUG] Transitioning to comparisonQuiz');
         gameMode.value = 'comparisonQuiz'
       } else {
-        gameMode.value = 'orderByHeight'
+        console.log('[DEBUG] Transitioning to orderByHeight (fallback)');
+        gameMode.value = 'orderByHeight' // Fallback to primary
       }
     } else {
       // For error in findMissingNumber, allow another try
@@ -713,14 +734,14 @@ onMounted(() => {
     </div>
     
     <div v-if="gameMode === 'comparisonQuiz'" class="pt-[76px] h-[calc(100vh-76px)] relative">
-      <div v-if="showTertiaryGrass" class="flex justify-around items-end w-full mx-auto max-w-xl absolute bottom-0 left-0 right-0 pb-[160px]">
+      <div v-if="showTertiaryGrass" class="flex justify-around items-end w-full mx-auto max-w-xl absolute bottom-0 left-0 right-0 pb-[200px]">
         <div 
           v-for="(giraffe, index) in tertiaryQuizGiraffes" 
           :key="giraffe.id" 
           class="flex flex-col items-center"
         >
           <Giraffe
-            :height="giraffe.height"
+            :height="selectedTertiaryOption ? giraffe.height : tertiaryDisplayHeight"
             :head-size="60"
             :body-width="40"
             :visible="tertiaryGiraffesVisible[index]"
