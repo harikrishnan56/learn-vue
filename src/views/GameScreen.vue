@@ -179,40 +179,36 @@ const resetFindMissingNumberAnimationState = () => {
 }
 
 const generateMissingNumberGiraffes = () => {
-  const baseSequence = [1, 2, 3, 4]
+  const secondaryTask = stageTasks.value?.secondary
+  const rangeMax = secondaryTask?.data?.rangeMax ?? 9
+  const sequenceLength = 4
+  const baseSequence: number[] = []
+  while (baseSequence.length < sequenceLength) {
+    const n = Math.floor(Math.random() * rangeMax) + 1
+    if (!baseSequence.includes(n)) baseSequence.push(n)
+  }
+  baseSequence.sort((a, b) => a - b)
   const missingIndex = Math.floor(Math.random() * baseSequence.length)
   const missingValue = baseSequence[missingIndex]
   correctMissingNumber.value = missingValue
-  
   const newGiraffes: NumberedGiraffeData[] = []
-  
   for (let i = 0; i < baseSequence.length; i++) {
     newGiraffes.push({
       id: `num-g-${Date.now()}-${i}-${Math.random().toString(36).substring(7)}`,
       displayValue: i === missingIndex ? '?' : baseSequence[i],
-      height: 100 + (i * 30) // These are different heights than orderByHeight
+      height: 100 + (i * 30)
     })
   }
-  
   missingNumberGiraffes.value = newGiraffes
-  giraffesVisible.value = new Array(newGiraffes.length).fill(false) // Visibility for num-giraffes
-  
-  // Initialize giraffe display states for the new missing number giraffes
-  giraffeDisplayStates.value = newGiraffes.map(g => ({
-    id: g.id,
-    height: g.height,
-    speechText: null,
-    currentMood: 'happy'
-  }))
-  
+  giraffesVisible.value = new Array(newGiraffes.length).fill(false)
+  giraffeDisplayStates.value = newGiraffes.map(g => ({ id: g.id, height: g.height, speechText: null, currentMood: 'happy' }))
   const options = [missingValue]
   while (options.length < 3) {
-    const option = Math.floor(Math.random() * 9) + 1
+    const option = Math.floor(Math.random() * rangeMax) + 1
     if (!options.includes(option)) {
       options.push(option)
     }
   }
-  
   missingNumberOptions.value = options.sort(() => Math.random() - 0.5)
 }
 
