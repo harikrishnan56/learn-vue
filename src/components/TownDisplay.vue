@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<{
   speechText: null,
   showSpeechBubble: false
 })
-const giraffeHeights = computed(()=>{ return [60, 80, 70] })
+const giraffeHeights = computed(()=>[70, 100, 50])
 const label = computed(()=>`${props.town.label} - ${props.town.population}`)
 </script>
 
@@ -26,52 +26,23 @@ const label = computed(()=>`${props.town.label} - ${props.town.population}`)
       :visible="true"
       class="absolute bottom-full mb-1 z-10"
     />
-    <div class="town-container flex flex-col items-center relative">
-      <div class="flex items-end space-x-[-15px] relative z-10 pb-2">
-        <Giraffe
-          v-for="(h,i) in giraffeHeights"
-          :key="i"
-          :height="h"
-          :mood="props.mood"
-          :head-size="40"
-          :body-width="25"
-          :visible="true"
-          :class="{'z-0': i !==1, 'z-5': i===1 }"
-        />
-      </div>
-      <div class="town-label text-xl font-semibold text-[#3A8737] relative z-20">
-        {{ label }}
-      </div>
+    <div class="flex items-end space-x-4">
+      <Giraffe
+        v-for="(h,i) in giraffeHeights"
+        :key="i"
+        :height="h"
+        :mood="props.mood"
+        :head-size="40"
+        :body-width="25"
+        :visible="true"
+        :class="i===1 ? 'z-10' : ''"
+      />
+    </div>
+    <div class="mt-2 text-xl font-semibold text-[#3A8737] bg-[#4FAB4C] bg-opacity-50 px-4 py-2 rounded-lg shadow-md">
+      {{ label }}
     </div>
   </div>
 </template>
 
 <style scoped>
-.town-container {
-  position: relative;
-  width: 180px;
-}
-
-.town-container::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: calc(100% - 30px);
-  background-color: #83CA54;
-  background-image: linear-gradient(135deg, rgba(0, 0, 0, 0.1) 25%, transparent 25%, 
-                    transparent 50%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1) 75%, 
-                    transparent 75%, transparent);
-  background-size: 20px 20px;
-  z-index: 1;
-  border-radius: 8px;
-}
-
-.town-label {
-  position: relative;
-  padding: 6px 12px;
-  border-radius: 8px;
-  margin-top: -5px;
-}
 </style>
