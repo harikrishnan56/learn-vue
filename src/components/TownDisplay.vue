@@ -12,37 +12,42 @@ const props = withDefaults(defineProps<{
   speechText: null,
   showSpeechBubble: false
 })
-const giraffeHeights = computed(()=>[70, 100, 50])
+const giraffeHeights = computed(()=>[100, 160, 80])
 const label = computed(()=>`${props.town.label} - ${props.town.population}`)
 </script>
 
 <template>
-  <div class="flex flex-col items-center relative">
-    <Giraffe
-      v-if="props.showSpeechBubble && props.speechText"
-      :height="0"
-      :show-speech-bubble="true"
-      :speech-text="props.speechText"
-      :visible="true"
-      class="absolute bottom-full mb-1 z-10"
-    />
-    <div class="flex items-end space-x-4">
+  <div class="flex flex-col items-center relative max-w-full">
+    <Transition name="fade">
+      <Giraffe
+        v-if="props.showSpeechBubble && props.speechText"
+        :height="0"
+        :show-speech-bubble="true"
+        :speech-text="props.speechText"
+        :visible="true"
+        displayMode="speech-only"
+        class="absolute bottom-full mb-1 z-10"
+      />
+    </Transition>
+    <div class="flex items-end space-x-2 sm:space-x-4">
       <Giraffe
         v-for="(h,i) in giraffeHeights"
         :key="i"
         :height="h"
         :mood="props.mood"
         :head-size="40"
-        :body-width="25"
+        :body-width="30"
         :visible="true"
         :class="i===1 ? 'z-10' : ''"
+        displayMode="full"
       />
     </div>
-    <div class="mt-2 text-xl font-semibold text-[#3A8737] bg-[#4FAB4C] bg-opacity-50 px-4 py-2 rounded-lg shadow-md">
+    <div class="mt-2 text-sm sm:text-xl font-semibold text-[#3A8737] bg-[#4FAB4C] bg-opacity-50 px-2 sm:px-4 py-1 sm:py-2 rounded-lg shadow-md">
       {{ label }}
     </div>
   </div>
 </template>
 
 <style scoped>
+/* Assuming .fade transitions are globally available or defined elsewhere if needed */
 </style>

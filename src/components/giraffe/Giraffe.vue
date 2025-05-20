@@ -17,6 +17,7 @@ interface Props {
   showNumber?: boolean
   visible?: boolean
   multiLine?: boolean
+  displayMode?: 'full' | 'speech-only'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -31,13 +32,15 @@ const props = withDefaults(defineProps<Props>(), {
   showNumber: false,
   visible: true,
   multiLine: false,
+  displayMode: 'full'
 })
 
 const bodyHeight = () => {
-  return props.height - (props.headSize * 0.7) // Overlap the head slightly
+  if (props.displayMode === 'speech-only') return 0;
+  return Math.max(0, props.height - (props.headSize * 0.7))
 }
 
-const bodyMargin = computed(() => `-${(props.headSize * 0.3) + 5}px`) // Move head 5px down
+const bodyMargin = computed(() => `-${(props.headSize * 0.3) + 5}px`)
 </script>
 
 <template>
@@ -52,22 +55,21 @@ const bodyMargin = computed(() => `-${(props.headSize * 0.3) + 5}px`) // Move he
       />
       
       <div 
-        v-if="props.showNumber && props.displayNumber !== null" 
+        v-if="props.showNumber && props.displayNumber !== null && props.displayMode === 'full'" 
         class="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-xl z-20"
       >
         {{ props.displayNumber }}
       </div>
       
-      <div class="flex flex-col items-center">
+      <div v-if="props.displayMode === 'full'" class="flex flex-col items-center">
         <div class="relative">
-          <!-- Giraffe component -->
           <div class="flex flex-col items-center">
             <GiraffeHead 
               :size="props.headSize"
               :face-direction="props.faceDirection"
               :mood="props.mood"
             />
-            <div :style="{ marginTop: bodyMargin }"> <!-- Dynamic overlap margin -->
+            <div :style="{ marginTop: bodyMargin }">
               <GiraffeBody 
                 :height="bodyHeight()"
                 :width="props.bodyWidth"

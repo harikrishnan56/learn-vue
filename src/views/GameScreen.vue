@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useGameStore } from '../stores/gameStore'
 import GameHeader from '../components/GameHeader.vue'
@@ -533,6 +533,7 @@ watch(gameMode, (newMode) => {
   resetFindMissingNumberAnimationState()
   resetTertiaryQuizAnimationState()
   resetBinaryComparisonAnimationState()
+  showTownSpeechBubbles.value = false // Reset on mode change
   
   if (newMode === 'orderByHeight') {
     const ensureOrderGiraffes = !giraffes.value.every(g => g.id.startsWith('g-'))
@@ -549,8 +550,10 @@ watch(gameMode, (newMode) => {
     startBinaryComparisonAnimation()
   } else if (newMode === 'orderByTownPopulation') {
     const dataTowns = stageTasks.value?.primary?.data?.towns as TownData[] || []
+    initialTownData.value = [...dataTowns] 
+    townsOnScreen.value = [...dataTowns] // Display initial static order
     townList.value = dataTowns.map(({ id, label }) => ({ id, label }))
-    currentOrder.value = townList.value.map(t => t.id)
+    currentOrder.value = dataTowns.map(t => t.id) 
   }
 });
 
@@ -617,9 +620,18 @@ const handleNumberSelect = (displayValue: number) => {
 
 function onContinue() {
   showResultOverlay.value = false
-  showSpeechBubblesGlobal.value = false
+  showSpeechBubblesGlobal.value = false // General speech bubble flag
   
-  if (gameMode.value === 'orderByHeight') {
+  if (gameMode.value === 'orderByTownPopulation') {
+    showTownSpeechBubbles.value = false // Specifically for towns
+    if (overlayType.value === 'success') {
+      gameStore.advanceStage()
+      gameMode.value = 'orderByHeight' // Or next appropriate mode
+    } else {
+      // If error, townsOnScreen should already be showing initialTownData
+      // No need to change townsOnScreen, just ensure bubbles are off
+    }
+  } else if (gameMode.value === 'orderByHeight') {
     if (overlayType.value === 'success') {
       showSecondaryObjective.value = true
     }
@@ -650,13 +662,6 @@ function onContinue() {
     } else {
       showTertiaryQuestionModal.value = gameMode.value === 'comparisonQuiz'
       showBinaryComparisonQuestionModal.value = gameMode.value === 'binaryComparisonSymbols'
-    }
-  } else if (gameMode.value === 'orderByTownPopulation') {
-    if (overlayType.value === 'success') {
-      gameStore.advanceStage()
-      gameMode.value = 'orderByHeight'
-    } else {
-      showTownSpeechBubbles.value = false
     }
   }
 }
@@ -794,46 +799,116 @@ function handleTertiaryOptionSelect(optionId: string) {
 }
 
 // Town population ordering state and handlers
-const townList = ref<Pick<TownData,'id'|'label'>[]>([])
-const currentOrder = ref<string[]>([])
-const orderedTownData = computed(() => currentOrder.value.map(id => (stageTasks.value?.primary?.data?.towns as TownData[]).find(t => t.id === id)!))
+const initialTownData = ref<TownData[]>([]) // Stores the original, fixed order from config
+const townsOnScreen = ref<TownData[]>([])   // Data source for v-for rendering TownDisplay, can change on correct check
+const townList = ref<Pick<TownData,'id'|'label'>[]>([]) // For controls labels (A,B,C,D)
+const currentOrder = ref<string[]>([]) // Tracks user's reordered IDs from controls
+
 const showTownSpeechBubbles = ref(false)
-const townSpeechTexts = ref<(string | null)[]>([])
-const townMoods = ref<('happy'|'sad'|'confused'|'idle')[]>([])
+const townSpeechTexts = ref<Record<string, string | null>>({})
+const townMoods = ref<Record<string, ('happy'|'sad'|'confused'|'idle')>>({})
 
 function handleTownOrderUpdated(newOrder: string[]) {
   currentOrder.value = newOrder
-  showTownSpeechBubbles.value = false
+  showTownSpeechBubbles.value = false 
+  // townsOnScreen remains static here, showing initialTownData
 }
 
-function handleTownCheck() {
-  const ordered = orderedTownData.value
-  const populations = ordered.map(t => t.population)
-  const sorted = [...populations].sort((a, b) => a - b)
-  const isCorrect = JSON.stringify(populations) === JSON.stringify(sorted)
-  townSpeechTexts.value = ordered.map((town) => {
-    if (isCorrect) {
-      if (town.population === sorted[0]) return "I'm the smallest"
-      else if (town.population === sorted[sorted.length - 1]) return "I'm the largest!"
-      else {
-        const idx = sorted.indexOf(town.population)
-        const prev = sorted[idx - 1]
-        const next = sorted[idx + 1]
-        return `I'm between ${prev} & ${next}`
+async function handleTownCheck() {
+  const userOrderedData = currentOrder.value.map(id => initialTownData.value.find(t => t.id === id)!);
+  const populationsInUserOrder = userOrderedData.map(t => t.population);
+  const correctlySortedPopsOverall = [...initialTownData.value.map(t => t.population)].sort((a, b) => a - b);
+
+  const isOverallCorrect = JSON.stringify(populationsInUserOrder) === JSON.stringify(correctlySortedPopsOverall);
+
+  const newSpeechTexts: Record<string, string | null> = {};
+  const newMoods: Record<string, 'happy'|'sad'|'confused'|'idle'> = {};
+
+  if (isOverallCorrect) {
+    townsOnScreen.value = [...userOrderedData];
+    await nextTick();
+
+    const sortedPops = correctlySortedPopsOverall.slice();
+    
+    userOrderedData.forEach((town) => {
+      const pop = town.population;
+      const popIndex = sortedPops.indexOf(pop);
+      
+      if (popIndex === sortedPops.length - 1) {
+        newSpeechTexts[town.id] = "We're the highest";
+      } else if (popIndex === 0) {
+        newSpeechTexts[town.id] = "We're least!";
+      } else if (popIndex === 1) {
+        const prevPop = sortedPops[0];
+        const nextPop = sortedPops[2];
+        newSpeechTexts[town.id] = `We're between ${prevPop} & ${nextPop}`;
+      } else {
+        const prevPop = sortedPops[popIndex - 1];
+        const nextPop = sortedPops[popIndex + 1];
+        newSpeechTexts[town.id] = `We're between ${prevPop} & ${nextPop}`;
       }
-    } else {
-      return 'Oh no!'
-    }
-  })
-  townMoods.value = townSpeechTexts.value.map((_, i) => isCorrect || populations[i] === sorted[i] ? 'happy' : 'sad')
-  showTownSpeechBubbles.value = true
-  overlayType.value = isCorrect ? 'success' : 'error'
-  showResultOverlay.value = true
+      
+      newMoods[town.id] = 'happy';
+    });
+    
+    overlayType.value = 'success';
+  } else {
+    const userSortedAttemptPops = [...populationsInUserOrder].sort((a,b) => a-b);
+    
+    initialTownData.value.forEach(staticTown => {
+      const userSubmittedVersionOfThisTown = userOrderedData.find(t => t.id === staticTown.id);
+      
+      if (userSubmittedVersionOfThisTown) {
+        const itsRankInUserAttempt = populationsInUserOrder.indexOf(userSubmittedVersionOfThisTown.population);
+        const isThisTownInCorrectSlotOfAttempt = userSubmittedVersionOfThisTown.population === userSortedAttemptPops[itsRankInUserAttempt];
+        
+        newMoods[staticTown.id] = isThisTownInCorrectSlotOfAttempt ? 'happy' : 'sad';
+        
+        if (isThisTownInCorrectSlotOfAttempt) {
+          const pop = staticTown.population;
+          const popIndex = correctlySortedPopsOverall.indexOf(pop);
+          
+          if (popIndex === correctlySortedPopsOverall.length - 1) {
+            newSpeechTexts[staticTown.id] = "We're the highest";
+          } else if (popIndex === 0) {
+            newSpeechTexts[staticTown.id] = "We're least!";
+          } else {
+            newSpeechTexts[staticTown.id] = "We're not in order!";
+          }
+        } else {
+          newSpeechTexts[staticTown.id] = "We're not in order!";
+        }
+      } else {
+        newMoods[staticTown.id] = 'confused';
+        newSpeechTexts[staticTown.id] = "We're confused!";
+      }
+    });
+    
+    overlayType.value = 'error';
+  }
+
+  townSpeechTexts.value = newSpeechTexts;
+  townMoods.value = newMoods;
+  showTownSpeechBubbles.value = true;
+
+  setTimeout(() => {
+    showResultOverlay.value = true;
+  }, 1500);
 }
 
 onMounted(() => {
-  resetOrderByHeightAnimationState(); resetFindMissingNumberAnimationState(); resetTertiaryQuizAnimationState(); resetBinaryComparisonAnimationState();
-  if (gameMode.value === 'orderByHeight') {
+  resetOrderByHeightAnimationState(); 
+  resetFindMissingNumberAnimationState(); 
+  resetTertiaryQuizAnimationState(); 
+  resetBinaryComparisonAnimationState();
+
+  if (gameMode.value === 'orderByTownPopulation') {
+    const dataTowns = stageTasks.value?.primary?.data?.towns as TownData[] || []
+    initialTownData.value = [...dataTowns];
+    townsOnScreen.value = [...dataTowns];
+    townList.value = dataTowns.map(({ id, label }) => ({ id, label }));
+    currentOrder.value = dataTowns.map(t => t.id);
+  } else if (gameMode.value === 'orderByHeight') {
     if (giraffes.value.length === 0) generateGiraffes(); else startOrderByHeightAnimation();
   } else if (gameMode.value === 'findMissingNumber') {
     startFindMissingNumberAnimation();
@@ -841,10 +916,6 @@ onMounted(() => {
     startTertiaryQuizAnimation();
   } else if (gameMode.value === 'binaryComparisonSymbols') {
     startBinaryComparisonAnimation();
-  } else if (gameMode.value === 'orderByTownPopulation') {
-    const dataTowns = stageTasks.value?.primary?.data?.towns as TownData[] || []
-    townList.value = dataTowns.map(({ id, label }) => ({ id, label }))
-    currentOrder.value = townList.value.map(t => t.id)
   }
 })
 </script>
@@ -1013,26 +1084,26 @@ onMounted(() => {
     </div>
     
     <!-- Container for Town population ordering stage -->
-    <div v-if="gameMode === 'orderByTownPopulation'" class="pt-[120px] h-[calc(100vh-76px)] relative flex flex-col items-center">
-      <div class="w-full flex flex-col items-center space-y-4">
-        <div class="flex justify-around w-full">
+    <div v-if="gameMode === 'orderByTownPopulation'" class="absolute top-[100px] sm:top-[100px] bottom-[177px] sm:bottom-[200px] left-0 right-0 flex flex-col">
+      <div class="flex-1 flex flex-col w-full">
+        <div class="flex-1 flex justify-evenly items-end w-full px-4 sm:px-8 bg-white py-4">
           <TownDisplay
-            v-for="(town, index) in orderedTownData.slice(0, 2)"
+            v-for="town in townsOnScreen.slice(0, 2)"
             :key="town.id"
             :town="town"
-            :show-speech-bubble="showTownSpeechBubbles && currentOrder.indexOf(town.id) < 2"
-            :speech-text="townSpeechTexts[currentOrder.indexOf(town.id)]"
-            :mood="townMoods[currentOrder.indexOf(town.id)]"
+            :show-speech-bubble="showTownSpeechBubbles"
+            :speech-text="townSpeechTexts[town.id]"
+            :mood="townMoods[town.id]"
           />
         </div>
-        <div class="w-full bg-[#83CA54] pt-8 pb-56 flex justify-around">
+        <div class="flex-1 flex justify-evenly items-end w-full px-4 sm:px-8 bg-[#83CA54] py-4">
           <TownDisplay
-            v-for="(town, index) in orderedTownData.slice(2, 4)"
+            v-for="town in townsOnScreen.slice(2, 4)"
             :key="town.id"
             :town="town"
-            :show-speech-bubble="showTownSpeechBubbles && currentOrder.indexOf(town.id) >= 2"
-            :speech-text="townSpeechTexts[currentOrder.indexOf(town.id)]"
-            :mood="townMoods[currentOrder.indexOf(town.id)]"
+            :show-speech-bubble="showTownSpeechBubbles"
+            :speech-text="townSpeechTexts[town.id]"
+            :mood="townMoods[town.id]"
           />
         </div>
       </div>
