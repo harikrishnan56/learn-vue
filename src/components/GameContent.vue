@@ -43,22 +43,24 @@ const getGiraffeHeight = (height: number) => {
       <h2 class="text-xl font-gabarito font-normal text-brand-blue">Order the giraffes based on their height</h2>
     </div>
     
-    <div class="flex justify-around items-end w-full mx-auto max-w-xl mt-auto">
-      <div 
-        v-for="(giraffe, index) in props.giraffes" 
-        :key="giraffe.id" 
-        class="flex flex-col items-center" 
-      >
-        <Giraffe
-          :height="getGiraffeHeight(giraffe.height)"
-          :id="giraffe.id"
-          :head-size="FIXED_WIDTH * HEAD_RATIO"
-          :body-width="FIXED_WIDTH"
-          :mood="giraffe.currentMood"
-          :speech-text="giraffe.speechText"
-          :show-speech-bubble="giraffe.showSpeechBubble"
-          :visible="props.giraffesVisible ? props.giraffesVisible[index] : true"
-        />
+    <div class="flex-grow flex flex-col justify-end">
+      <div class="flex justify-around items-end w-full mx-auto max-w-xl mb-0">
+        <div 
+          v-for="(giraffe, index) in props.giraffes" 
+          :key="giraffe.id" 
+          class="flex flex-col items-center" 
+        >
+          <Giraffe
+            :height="getGiraffeHeight(giraffe.height)"
+            :id="giraffe.id"
+            :head-size="FIXED_WIDTH * HEAD_RATIO"
+            :body-width="FIXED_WIDTH"
+            :mood="giraffe.currentMood"
+            :speech-text="giraffe.speechText"
+            :show-speech-bubble="giraffe.showSpeechBubble"
+            :visible="props.giraffesVisible ? props.giraffesVisible[index] : true"
+          />
+        </div>
       </div>
     </div>
   </main>

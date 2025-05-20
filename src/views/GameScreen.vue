@@ -813,7 +813,7 @@ onMounted(() => {
     <div v-if="gameMode === 'orderByHeight'" class="absolute top-[76px] bottom-0 left-0 right-0">
       <GameContent
         :giraffes="gameContentData"
-        class="h-full pb-[278px]"
+        class="h-full pb-[243px]"
         :animate-objective-up="objectiveTextAnimatingUp"
         :giraffes-visible="giraffesOrderVisible"
       />
@@ -850,7 +850,7 @@ onMounted(() => {
     </div>
     
     <div v-if="gameMode === 'comparisonQuiz'" class="pt-[76px] h-[calc(100vh-76px)] relative">
-      <div v-if="showTertiaryGrass" class="flex justify-around items-end w-full mx-auto max-w-xl absolute bottom-0 left-0 right-0 pb-[200px]">
+      <div v-if="showTertiaryGrass" class="flex justify-around items-end w-full mx-auto max-w-xl absolute bottom-0 left-0 right-0 pb-[165px]">
         <div 
           v-for="(giraffe, index) in tertiaryQuizGiraffes" 
           :key="giraffe.id" 
@@ -875,7 +875,7 @@ onMounted(() => {
     </div>
     
     <div v-if="gameMode === 'binaryComparisonSymbols'" class="pt-[76px] h-[calc(100vh-76px)] relative">
-      <div v-if="showBinaryComparisonGrass" class="flex justify-around items-end w-full mx-auto max-w-xl absolute bottom-0 left-0 right-0 pb-[200px]">
+      <div v-if="showBinaryComparisonGrass" class="flex justify-around items-end w-full mx-auto max-w-xl absolute bottom-0 left-0 right-0 pb-[165px]">
         <div 
           v-for="(giraffe, index) in binaryComparisonGiraffes" 
           :key="giraffe.id" 
