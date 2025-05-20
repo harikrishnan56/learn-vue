@@ -36,7 +36,7 @@ const route = useRoute()
 const gameStore = useGameStore()
 const stage = computed(() => gameStore.currentStage)
 const stageTasks = computed(() => gameStore.getCurrentStageTasks)
-const gameMode = ref<'orderByHeight' | 'findMissingNumber' | 'comparisonQuiz' | 'binaryComparisonSymbols' | 'orderByTownPopulation' | 'findTownPopulation'>('orderByHeight')
+const gameMode = ref<'orderByHeight' | 'findMissingNumber' | 'comparisonQuiz' | 'binaryComparisonSymbols' | 'orderByTownPopulation' | 'findTownPopulation' | 'compareTownPopulations'>('orderByHeight')
 const stageParam = route.query.stage ? parseInt(route.query.stage as string) : NaN
 if (!isNaN(stageParam)) {
   gameStore.setStage(stageParam)
@@ -533,6 +533,7 @@ watch(gameMode, (newMode) => {
   resetFindMissingNumberAnimationState()
   resetTertiaryQuizAnimationState()
   resetBinaryComparisonAnimationState()
+  resetCompareTownsAnimationState()
   showTownSpeechBubbles.value = false // Reset on mode change
   
   if (newMode === 'orderByHeight') {
@@ -548,6 +549,8 @@ watch(gameMode, (newMode) => {
     startTertiaryQuizAnimation()
   } else if (newMode === 'binaryComparisonSymbols') {
     startBinaryComparisonAnimation()
+  } else if (newMode === 'compareTownPopulations') {
+    startCompareTownsAnimation()
   } else if (newMode === 'orderByTownPopulation') {
     const dataTowns = stageTasks.value?.primary?.data?.towns as TownData[] || []
     initialTownData.value = [...dataTowns] 
@@ -636,10 +639,30 @@ function onContinue() {
     }
   } else if (gameMode.value === 'findTownPopulation') {
     if (overlayType.value === 'success') {
+      const tertiaryTask = stageTasks.value?.tertiary
+      if (tertiaryTask?.type === 'compareTownPopulations') {
+        secondaryObjectiveText.value = "Let's compare town populations!"
+        showSecondaryObjective.value = true
+      } else {
+        gameStore.advanceStage()
+        gameMode.value = 'orderByHeight'
+      }
+    } else {
+      showTownPopulationQuestion.value = true
+    }
+  } else if (gameMode.value === 'compareTownPopulations') {
+    if (overlayType.value === 'success') {
       gameStore.advanceStage()
       gameMode.value = 'orderByHeight'
     } else {
-      showTownPopulationQuestion.value = true
+      // Reset speech bubbles to initial state for retry
+      compareTownsDisplayData.value = compareTownsDisplayData.value.map((town, index) => ({
+        ...town,
+        speechText: index === 0 ? "Town A" : "Town B",
+        currentMood: 'happy'
+      }))
+      showSpeechBubblesGlobal.value = true
+      showCompareTownsModal.value = true
     }
   } else if (gameMode.value === 'orderByHeight') {
     if (overlayType.value === 'success') {
@@ -682,6 +705,8 @@ function handleSecondaryComplete() {
   if (gameMode.value === 'orderByTownPopulation') {
     generateTownPopulationQuestion()
     gameMode.value = 'findTownPopulation'
+  } else if (gameMode.value === 'findTownPopulation' && secondaryObjectiveText.value === "Let's compare town populations!") {
+    gameMode.value = 'compareTownPopulations'
   } else if (gameMode.value === 'orderByHeight') {
     gameMode.value = 'findMissingNumber'
   }
@@ -968,11 +993,140 @@ async function handleTownCheck() {
   }, 1500);
 }
 
+// Town comparison state
+const compareTownsDisplayData = ref<Array<TownData & { visualLabel: string, speechText: string | null, currentMood: 'happy' | 'confused' | 'idle' | 'sad' }>>([])
+const compareTownsQuestionText = ref<string>('')
+const compareTownsOptions = ref<Array<{ id: string, label: string }>>([])
+const actualTown1Population = ref<number>(0)
+const actualTown2Population = ref<number>(0)
+const correctTownsComparisonOperator = ref<'>' | '<' | '=' | null>(null)
+const showCompareTownsModal = ref<boolean>(false)
+const compareTownsObjectiveAnimatingUp = ref<boolean>(false)
+const compareTownsElementsVisible = ref<boolean>(false)
+const compareTownsPairVisible = ref<[boolean, boolean]>([false, false])
+const initialCompareTownsAnimationComplete = ref<boolean>(false)
+
+function generateCompareTownsData() {
+  const tertiaryTask = stageTasks.value?.tertiary
+  if (!tertiaryTask || tertiaryTask.type !== 'compareTownPopulations') return
+
+  compareTownsQuestionText.value = tertiaryTask.data?.questionText || "How does the population of Town A compare to Town B?"
+  compareTownsOptions.value = tertiaryTask.data?.options || []
+
+  // Randomly select two distinct towns from initialTownData
+  const allTowns = initialTownData.value
+  if (allTowns.length < 2) return
+  
+  const shuffledTowns = [...allTowns].sort(() => Math.random() - 0.5)
+  const sourceTown1 = shuffledTowns[0]
+  const sourceTown2 = shuffledTowns[1]
+  
+  actualTown1Population.value = sourceTown1.population
+  actualTown2Population.value = sourceTown2.population
+  
+  // Determine the correct comparison operator
+  if (actualTown1Population.value > actualTown2Population.value) {
+    correctTownsComparisonOperator.value = '>'
+  } else if (actualTown1Population.value < actualTown2Population.value) {
+    correctTownsComparisonOperator.value = '<'
+  } else {
+    correctTownsComparisonOperator.value = '='
+  }
+  
+  // Populate compareTownsDisplayData
+  compareTownsDisplayData.value = [
+    { 
+      ...sourceTown1, 
+      visualLabel: tertiaryTask.data?.townLabel1 || 'Town A', 
+      speechText: tertiaryTask.data?.townLabel1 || 'Town A', 
+      currentMood: 'happy' 
+    },
+    { 
+      ...sourceTown2, 
+      visualLabel: tertiaryTask.data?.townLabel2 || 'Town B', 
+      speechText: tertiaryTask.data?.townLabel2 || 'Town B', 
+      currentMood: 'happy' 
+    }
+  ]
+  
+  compareTownsPairVisible.value = [false, false]
+}
+
+function resetCompareTownsAnimationState() {
+  compareTownsObjectiveAnimatingUp.value = false
+  compareTownsElementsVisible.value = false
+  compareTownsPairVisible.value = [false, false]
+  showCompareTownsModal.value = false
+  initialCompareTownsAnimationComplete.value = false
+}
+
+function startCompareTownsAnimation() {
+  generateCompareTownsData()
+  resetCompareTownsAnimationState()
+  
+  // Start animation sequence
+  compareTownsObjectiveAnimatingUp.value = true
+  compareTownsElementsVisible.value = true
+  
+  setTimeout(() => {
+    compareTownsPairVisible.value = [true, true]
+    
+    // After towns appear, show speech bubbles with labels
+    setTimeout(() => {
+      showSpeechBubblesGlobal.value = true
+      
+      // After speech bubbles are visible, show question modal
+      setTimeout(() => {
+        showCompareTownsModal.value = true
+        initialCompareTownsAnimationComplete.value = true
+      }, 2000)
+    }, 1000)
+  }, 1000)
+}
+
+function handleCompareTownsOptionSelect(optionId: string) {
+  const selectedOption = compareTownsOptions.value.find(opt => opt.id === optionId)
+  if (!selectedOption) return
+
+  const selectedOperator = selectedOption.label as '>' | '<' | '='
+  const isCorrect = selectedOperator === correctTownsComparisonOperator.value
+
+  showCompareTownsModal.value = false
+  overlayType.value = isCorrect ? 'success' : 'error'
+
+  // Update speech bubbles for feedback
+  if (isCorrect) {
+    compareTownsDisplayData.value = compareTownsDisplayData.value.map((town, index) => ({
+      ...town,
+      speechText: index === 0 ? "Awesome!" : 
+                 (correctTownsComparisonOperator.value === '>' ? 
+                   "Town A has more population than Town B" : 
+                   correctTownsComparisonOperator.value === '<' ? 
+                   "Town A has less population than Town B" : 
+                   "Both towns have the same population"),
+      currentMood: 'happy'
+    }))
+  } else {
+    compareTownsDisplayData.value = compareTownsDisplayData.value.map((town, index) => ({
+      ...town,
+      speechText: index === 0 ? "Oh no!" : "Town A did not have as much population!",
+      currentMood: 'sad'
+    }))
+  }
+
+  showSpeechBubblesGlobal.value = true
+  
+  setTimeout(() => {
+    showResultOverlay.value = true
+  }, 1500)
+}
+
 onMounted(() => {
   resetOrderByHeightAnimationState(); 
   resetFindMissingNumberAnimationState(); 
   resetTertiaryQuizAnimationState(); 
   resetBinaryComparisonAnimationState();
+  resetCompareTownsAnimationState();
 
   if (gameMode.value === 'orderByTownPopulation') {
     const dataTowns = stageTasks.value?.primary?.data?.towns as TownData[] || []
@@ -988,6 +1142,8 @@ onMounted(() => {
     startTertiaryQuizAnimation();
   } else if (gameMode.value === 'binaryComparisonSymbols') {
     startBinaryComparisonAnimation();
+  } else if (gameMode.value === 'compareTownPopulations') {
+    startCompareTownsAnimation();
   }
 })
 </script>
@@ -1101,6 +1257,30 @@ onMounted(() => {
       
       <Transition name="fade">
         <div v-if="showBinaryComparisonGrass" class="absolute bottom-0 left-0 right-0 h-20 bg-brand-green-light z-0"></div>
+      </Transition>
+    </div>
+    
+    <!-- Container for Town Population Comparison mode -->
+    <div v-if="gameMode === 'compareTownPopulations'" class="pt-[76px] h-[calc(100vh-76px)] relative">
+      <div v-if="compareTownsElementsVisible" class="flex justify-around items-start w-full mx-auto max-w-xl absolute bottom-[200px] left-0 right-0">
+        <div 
+          v-for="(town, index) in compareTownsDisplayData" 
+          :key="town.id" 
+          class="flex flex-col items-center"
+        >
+          <TownDisplay
+            :town="town"
+            :showPopulationInLabel="false"
+            :hideLabelText="true"
+            :speechText="town.speechText"
+            :mood="town.currentMood"
+            :showSpeechBubble="showSpeechBubblesGlobal"
+          />
+        </div>
+      </div>
+      
+      <Transition name="fade">
+        <div v-if="compareTownsElementsVisible" class="absolute bottom-0 left-0 right-0 h-20 bg-brand-green-light z-0"></div>
       </Transition>
     </div>
     
@@ -1249,6 +1429,24 @@ onMounted(() => {
       @check="handleTownCheck"
       class="fixed bottom-0 left-0 right-0 z-10"
     />
+    
+    <!-- Container for Town Population Comparison controls and modal -->
+    <div v-if="gameMode === 'compareTownPopulations'" class="fixed bottom-0 left-0 right-0 z-10">
+      <GameControls 
+        :controls-visible="compareTownsElementsVisible" 
+        :show-interactive-content="false" 
+        :townPopulationsForDisplay="{ pop1: actualTown1Population, pop2: actualTown2Population }"
+      />
+      <div class="absolute bottom-0 left-0 right-0">
+        <TertiaryQuestionModal 
+          :visible="showCompareTownsModal" 
+          :options="compareTownsOptions"
+          :question-text="compareTownsQuestionText"
+          @select="handleCompareTownsOptionSelect" 
+          class="w-full" 
+        />
+      </div>
+    </div>
     
     <FeedbackOverlay :visible="showResultOverlay" :type="overlayType" :game-mode="gameMode" @continue="onContinue" />
     <CountdownOverlay

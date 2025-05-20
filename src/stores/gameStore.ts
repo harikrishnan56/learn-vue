@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 export interface StageTaskDetail {
   id: string
   description: string
-  type?: 'orderByHeight' | 'findMissingNumber' | 'quiz' | 'comparisonQuiz' | 'binaryComparisonSymbols' | 'orderByTownPopulation'
+  type?: 'orderByHeight' | 'findMissingNumber' | 'quiz' | 'comparisonQuiz' | 'binaryComparisonSymbols' | 'orderByTownPopulation' | 'compareTownPopulations'
   data?: any 
 }
 
@@ -121,7 +121,21 @@ export const useGameStore = defineStore('game', {
               rangeMax: 5000
             }
           },
-          tertiary: null
+          tertiary: {
+            id: 's4t1',
+            description: 'Stage 4 - Tertiary: Compare Town Populations',
+            type: 'compareTownPopulations',
+            data: {
+              questionText: "How does the population of Town A compare to Town B?",
+              townLabel1: "Town A",
+              townLabel2: "Town B",
+              options: [
+                { id: 'gt', label: '>' },
+                { id: 'lt', label: '<' },
+                { id: 'eq', label: '=' }
+              ]
+            }
+          }
         }
       },
       showSecondaryObjectiveModal: false,
