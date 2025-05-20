@@ -34,7 +34,7 @@ const stage = computed(() => gameStore.currentStage)
 const stageTasks = computed(() => gameStore.getCurrentStageTasks)
 const stageParam = route.query.stage ? parseInt(route.query.stage as string) : NaN
 if (!isNaN(stageParam)) gameStore.setStage(stageParam)
-const gameMode = ref<'orderByHeight' | 'findMissingNumber' | 'comparisonQuiz'>('orderByHeight')
+const gameMode = ref<'orderByHeight' | 'findMissingNumber' | 'comparisonQuiz' | 'binaryComparisonSymbols'>('orderByHeight')
 const showGameContent = ref(true)
 const isOverallCorrect = ref(false)
 const giraffes = ref<GiraffeData[]>([])
@@ -80,6 +80,19 @@ const initialTertiaryQuizAnimationComplete = ref<boolean>(false)
 const showTertiaryGrass = ref<boolean>(false)
 const showTertiaryControlsShell = ref<boolean>(false)
 const tertiaryDisplayHeight = 150
+
+const binaryComparisonGiraffes = ref<Array<GiraffeDisplayState & { label: 'A' | 'B' }>>([])
+const binaryComparisonQuestionText = ref<string>('')
+const binaryComparisonOptions = ref<Array<{ id: string, label: string }>>([])
+const numA = ref<number>(0)
+const numB = ref<number>(0)
+const correctBinaryOperator = ref<'>' | '<' | '=' | null>(null)
+const binaryComparisonObjectiveAnimatingUp = ref<boolean>(false)
+const binaryComparisonGiraffesVisible = ref<boolean[]>([])
+const showBinaryComparisonQuestionModal = ref<boolean>(false)
+const initialBinaryComparisonAnimationComplete = ref<boolean>(false)
+const showBinaryComparisonGrass = ref<boolean>(false)
+const showBinaryComparisonControlsShell = ref<boolean>(false)
 
 const giraffeControlsData = computed(() => {
   return giraffes.value.map(g => ({ id: g.id, height: g.height }))
@@ -387,6 +400,87 @@ const startTertiaryQuizAnimation = () => {
   }, 1500)
 }
 
+const generateBinaryComparisonData = () => {
+  const tertiaryTask = stageTasks.value?.tertiary
+  if (!tertiaryTask || tertiaryTask.type !== 'binaryComparisonSymbols') return
+
+  binaryComparisonQuestionText.value = tertiaryTask.data?.questionText || "How does giraffe A compare to giraffe B?"
+  binaryComparisonOptions.value = tertiaryTask.data?.options || []
+  const rangeMax = tertiaryTask.data?.rangeMax || 999
+
+  numA.value = Math.floor(Math.random() * rangeMax) + 1
+  numB.value = Math.floor(Math.random() * rangeMax) + 1
+
+  correctBinaryOperator.value = numA.value > numB.value ? '>' : numA.value < numB.value ? '<' : '='
+
+  binaryComparisonGiraffes.value = [
+    {
+      id: `binary-g-${Date.now()}-A-${Math.random().toString(36).substring(7)}`,
+      height: numA.value,
+      label: 'A',
+      speechText: null,
+      currentMood: 'happy'
+    },
+    {
+      id: `binary-g-${Date.now()}-B-${Math.random().toString(36).substring(7)}`,
+      height: numB.value,
+      label: 'B',
+      speechText: null,
+      currentMood: 'happy'
+    }
+  ]
+
+  binaryComparisonGiraffesVisible.value = [false, false]
+}
+
+const startBinaryComparisonAnimation = () => {
+  generateBinaryComparisonData()
+  showBinaryComparisonGrass.value = true
+  showBinaryComparisonControlsShell.value = true
+  binaryComparisonObjectiveAnimatingUp.value = true
+
+  setTimeout(() => {
+    binaryComparisonGiraffesVisible.value = [true, true]
+    setTimeout(() => {
+      showBinaryComparisonQuestionModal.value = true
+      initialBinaryComparisonAnimationComplete.value = true
+    }, 1500)
+  }, 1000)
+}
+
+const resetBinaryComparisonAnimationState = () => {
+  binaryComparisonObjectiveAnimatingUp.value = false
+  showBinaryComparisonGrass.value = false
+  showBinaryComparisonControlsShell.value = false
+  binaryComparisonGiraffesVisible.value = [false, false]
+  showBinaryComparisonQuestionModal.value = false
+  initialBinaryComparisonAnimationComplete.value = false
+}
+
+const handleBinaryComparisonOptionSelect = (optionId: string) => {
+  const selectedOption = binaryComparisonOptions.value.find(opt => opt.id === optionId)
+  if (!selectedOption) return
+
+  const selectedOperator = selectedOption.label as '>' | '<' | '='
+  const isCorrect = selectedOperator === correctBinaryOperator.value
+
+  showBinaryComparisonQuestionModal.value = false
+  overlayType.value = isCorrect ? 'success' : 'error'
+
+  if (!isCorrect) {
+    binaryComparisonGiraffes.value = binaryComparisonGiraffes.value.map(giraffe => ({
+      ...giraffe,
+      speechText: giraffe.label === 'A' ? 
+        (numA.value > numB.value ? "I'm taller!" : "I'm shorter!") :
+        (numB.value > numA.value ? "I'm taller!" : "I'm shorter!"),
+      currentMood: 'confused'
+    }))
+  }
+
+  showSpeechBubblesGlobal.value = !isCorrect
+  showResultOverlay.value = true
+}
+
 watch(giraffes, (newGiraffesValue) => {
   if (gameMode.value === 'orderByHeight') {
     if (newGiraffesValue && newGiraffesValue.length > 0) {
@@ -401,7 +495,11 @@ watch(giraffes, (newGiraffesValue) => {
 }, { deep: true });
 
 watch(gameMode, (newMode) => {
-  resetOrderByHeightAnimationState(); resetFindMissingNumberAnimationState(); resetTertiaryQuizAnimationState();
+  resetOrderByHeightAnimationState()
+  resetFindMissingNumberAnimationState()
+  resetTertiaryQuizAnimationState()
+  resetBinaryComparisonAnimationState()
+  
   if (newMode === 'orderByHeight') {
     const ensureOrderGiraffes = !giraffes.value.every(g => g.id.startsWith('g-'))
     if (giraffes.value.length === 0 || ensureOrderGiraffes) {
@@ -413,6 +511,8 @@ watch(gameMode, (newMode) => {
     startFindMissingNumberAnimation()
   } else if (newMode === 'comparisonQuiz') {
     startTertiaryQuizAnimation()
+  } else if (newMode === 'binaryComparisonSymbols') {
+    startBinaryComparisonAnimation()
   }
 });
 
@@ -490,44 +590,28 @@ function onContinue() {
       showQuestionModal.value = false
       showGrass.value = false
 
-      // ---- START DEBUG LOGS ----
-      console.log('[DEBUG] In onContinue for findMissingNumber success');
-      console.log('[DEBUG] currentStage (from gameStore):', gameStore.currentStage);
-      console.log('[DEBUG] stage.value (computed):', stage.value);
-      // Use a deep copy for logging complex objects to avoid proxy issues in console
-      try {
-        console.log('[DEBUG] stageTasks.value:', JSON.parse(JSON.stringify(stageTasks.value)));
-        console.log('[DEBUG] stageTasks.value?.tertiary:', JSON.parse(JSON.stringify(stageTasks.value?.tertiary)));
-      } catch (e) {
-        console.error('[DEBUG] Error stringifying stageTasks:', e);
-        console.log('[DEBUG] stageTasks.value (raw):', stageTasks.value);
-      }
-      console.log('[DEBUG] stageTasks.value?.tertiary?.type:', stageTasks.value?.tertiary?.type);
-      // ---- END DEBUG LOGS ----
-
-      const hasTertiaryTask = stageTasks.value?.tertiary?.type === 'comparisonQuiz'
-      console.log('[DEBUG] hasTertiaryTask:', hasTertiaryTask); // Log the result of the check
+      const tertiaryTask = stageTasks.value?.tertiary
+      const hasTertiaryTask = tertiaryTask?.type === 'comparisonQuiz' || tertiaryTask?.type === 'binaryComparisonSymbols'
 
       if (hasTertiaryTask) {
-        console.log('[DEBUG] Transitioning to comparisonQuiz');
-        gameMode.value = 'comparisonQuiz'
+        gameMode.value = tertiaryTask.type === 'comparisonQuiz' ? 'comparisonQuiz' : 'binaryComparisonSymbols'
       } else {
-        console.log('[DEBUG] Transitioning to orderByHeight (fallback)');
-        gameMode.value = 'orderByHeight' // Fallback to primary
+        gameMode.value = 'orderByHeight'
       }
     } else {
-      // For error in findMissingNumber, allow another try
       showQuestionModal.value = true
     }
-  } else if (gameMode.value === 'comparisonQuiz') {
+  } else if (gameMode.value === 'comparisonQuiz' || gameMode.value === 'binaryComparisonSymbols') {
     if (overlayType.value === 'success') {
-      // After completing tertiary task, go back to primary task
       showTertiaryQuestionModal.value = false
       showTertiaryGrass.value = false
+      showBinaryComparisonQuestionModal.value = false
+      showBinaryComparisonGrass.value = false
+      gameStore.advanceStage()
       gameMode.value = 'orderByHeight'
     } else {
-      // For error in tertiary task, allow another try
-      showTertiaryQuestionModal.value = true
+      showTertiaryQuestionModal.value = gameMode.value === 'comparisonQuiz'
+      showBinaryComparisonQuestionModal.value = gameMode.value === 'binaryComparisonSymbols'
     }
   }
 }
@@ -665,13 +749,15 @@ function handleTertiaryOptionSelect(optionId: string) {
 }
 
 onMounted(() => {
-  resetOrderByHeightAnimationState(); resetFindMissingNumberAnimationState(); resetTertiaryQuizAnimationState();
+  resetOrderByHeightAnimationState(); resetFindMissingNumberAnimationState(); resetTertiaryQuizAnimationState(); resetBinaryComparisonAnimationState();
   if (gameMode.value === 'orderByHeight') {
     if (giraffes.value.length === 0) generateGiraffes(); else startOrderByHeightAnimation();
   } else if (gameMode.value === 'findMissingNumber') {
     startFindMissingNumberAnimation();
   } else if (gameMode.value === 'comparisonQuiz') {
     startTertiaryQuizAnimation();
+  } else if (gameMode.value === 'binaryComparisonSymbols') {
+    startBinaryComparisonAnimation();
   }
 })
 </script>
@@ -686,11 +772,13 @@ onMounted(() => {
       :objective-text="
         gameMode === 'findMissingNumber' ? 'Find the missing number for the new giraffe' : 
         gameMode === 'comparisonQuiz' ? 'Let\'s compare more giraffes!' : 
+        gameMode === 'binaryComparisonSymbols' ? 'Compare giraffes A and B' :
         'Order the giraffes based on their height'
       "
       :show-objective="
         gameMode === 'findMissingNumber' ? findNumObjectiveAnimatingUp : 
         gameMode === 'comparisonQuiz' ? tertiaryQuizObjectiveAnimatingUp : 
+        gameMode === 'binaryComparisonSymbols' ? binaryComparisonObjectiveAnimatingUp : 
         objectiveTextAnimatingUp
       "
     />
@@ -759,6 +847,31 @@ onMounted(() => {
       </Transition>
     </div>
     
+    <div v-if="gameMode === 'binaryComparisonSymbols'" class="pt-[76px] h-[calc(100vh-76px)] relative">
+      <div v-if="showBinaryComparisonGrass" class="flex justify-around items-end w-full mx-auto max-w-xl absolute bottom-0 left-0 right-0 pb-[200px]">
+        <div 
+          v-for="(giraffe, index) in binaryComparisonGiraffes" 
+          :key="giraffe.id" 
+          class="flex flex-col items-center"
+        >
+          <Giraffe
+            :height="giraffe.height"
+            :head-size="60"
+            :body-width="40"
+            :visible="binaryComparisonGiraffesVisible[index]"
+            :mood="getGiraffeMood(giraffe.id)"
+            :speech-text="getGiraffeSpeechText(giraffe.id)"
+            :show-speech-bubble="showSpeechBubblesGlobal"
+            :multi-line="binaryComparisonGiraffes.length > 3"
+          />
+        </div>
+      </div>
+      
+      <Transition name="fade">
+        <div v-if="showBinaryComparisonGrass" class="absolute bottom-0 left-0 right-0 h-20 bg-brand-green-light z-0"></div>
+      </Transition>
+    </div>
+    
     <GameControls
       v-if="gameMode === 'orderByHeight'"
       :giraffe-heights-data="giraffeControlsData"
@@ -787,6 +900,20 @@ onMounted(() => {
           :options="tertiaryOptions" 
           :question-text="tertiaryQuestionText"
           @select="handleTertiaryOptionSelect" 
+          class="w-full" 
+        />
+      </div>
+    </div>
+    
+    <!-- Container for GameControls (shell) and BinaryComparisonQuestionModal in binaryComparisonSymbols mode -->
+    <div v-if="gameMode === 'binaryComparisonSymbols'" class="fixed bottom-0 left-0 right-0 z-10">
+      <GameControls :controls-visible="showBinaryComparisonControlsShell" :show-interactive-content="false" />
+      <div class="absolute bottom-0 left-0 right-0">
+        <TertiaryQuestionModal 
+          :visible="showBinaryComparisonQuestionModal" 
+          :options="binaryComparisonOptions"
+          :question-text="binaryComparisonQuestionText"
+          @select="handleBinaryComparisonOptionSelect" 
           class="w-full" 
         />
       </div>
