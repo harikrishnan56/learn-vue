@@ -32,9 +32,11 @@ const route = useRoute()
 const gameStore = useGameStore()
 const stage = computed(() => gameStore.currentStage)
 const stageTasks = computed(() => gameStore.getCurrentStageTasks)
-const stageParam = route.query.stage ? parseInt(route.query.stage as string) : NaN
-if (!isNaN(stageParam)) gameStore.setStage(stageParam)
 const gameMode = ref<'orderByHeight' | 'findMissingNumber' | 'comparisonQuiz' | 'binaryComparisonSymbols'>('orderByHeight')
+const stageParam = route.query.stage ? parseInt(route.query.stage as string) : NaN
+if (!isNaN(stageParam)) {
+  gameStore.setStage(stageParam)
+}
 const showGameContent = ref(true)
 const isOverallCorrect = ref(false)
 const giraffes = ref<GiraffeData[]>([])
@@ -90,9 +92,21 @@ const correctBinaryOperator = ref<'>' | '<' | '=' | null>(null)
 const binaryComparisonObjectiveAnimatingUp = ref<boolean>(false)
 const binaryComparisonGiraffesVisible = ref<boolean[]>([])
 const showBinaryComparisonQuestionModal = ref<boolean>(false)
-const initialBinaryComparisonAnimationComplete = ref<boolean>(false)
+const initialBinaryComparisonAnimationComplete = ref(false)
 const showBinaryComparisonGrass = ref<boolean>(false)
 const showBinaryComparisonControlsShell = ref<boolean>(false)
+
+const BINARY_MIN_SCALE = 100
+const BINARY_MAX_SCALE = 200
+function getBinaryGiraffeHeight(rawHeight: number): number {
+  const heights = binaryComparisonGiraffes.value.map(g => g.height)
+  const minRaw = Math.min(...heights)
+  const maxRaw = Math.max(...heights)
+  if (minRaw === maxRaw) {
+    return (BINARY_MIN_SCALE + BINARY_MAX_SCALE) / 2
+  }
+  return BINARY_MIN_SCALE + ((rawHeight - minRaw) / (maxRaw - minRaw)) * (BINARY_MAX_SCALE - BINARY_MIN_SCALE)
+}
 
 const giraffeControlsData = computed(() => {
   return giraffes.value.map(g => ({ id: g.id, height: g.height }))
@@ -113,16 +127,21 @@ const gameContentData = computed(() => {
 const generateGiraffes = (count = 3) => {
   const newGiraffes: GiraffeData[] = []
   const usedHeights = new Set<number>()
-  for (let i = 0; i < count; ) {
-    const height = Math.floor(Math.random() * 20) + 5
-    if (!usedHeights.has(height)) {
-      usedHeights.add(height)
-      newGiraffes.push({
-        id: `g-${Date.now()}-${i}-${Math.random().toString(36).substring(7)}`,
-        height
-      })
-      i++
+  const primaryTask = stageTasks.value?.primary
+  const rangeMax: number | undefined = primaryTask?.data?.rangeMax
+  while (newGiraffes.length < count) {
+    let rawHeight: number
+    if (rangeMax != null) {
+      rawHeight = Math.floor(Math.random() * rangeMax) + 1
+    } else {
+      rawHeight = Math.floor(Math.random() * 20) + 5
     }
+    if (usedHeights.has(rawHeight)) continue
+    usedHeights.add(rawHeight)
+    newGiraffes.push({
+      id: `g-${Date.now()}-${newGiraffes.length}-${Math.random().toString(36).substring(7)}`,
+      height: rawHeight
+    })
   }
   giraffes.value = newGiraffes
   giraffeDisplayStates.value = newGiraffes.map(g => ({
@@ -855,7 +874,7 @@ onMounted(() => {
           class="flex flex-col items-center"
         >
           <Giraffe
-            :height="giraffe.height"
+            :height="getBinaryGiraffeHeight(giraffe.height)"
             :head-size="60"
             :body-width="40"
             :visible="binaryComparisonGiraffesVisible[index]"
@@ -864,6 +883,7 @@ onMounted(() => {
             :show-speech-bubble="showSpeechBubblesGlobal"
             :multi-line="binaryComparisonGiraffes.length > 3"
           />
+          <div class="mt-2 text-brand-green-strip text-xl font-gabarito font-bold">{{ giraffe.label }}</div>
         </div>
       </div>
       

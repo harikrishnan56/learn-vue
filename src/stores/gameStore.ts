@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 export interface StageTaskDetail {
   id: string
   description: string
-  type?: 'orderByHeight' | 'findMissingNumber' | 'quiz' | 'comparisonQuiz'
+  type?: 'orderByHeight' | 'findMissingNumber' | 'quiz' | 'comparisonQuiz' | 'binaryComparisonSymbols'
   data?: any 
 }
 
@@ -50,6 +50,24 @@ export const useGameStore = defineStore('game', {
           }
         },
       },
+      3: {
+        primary: { id: 's3p1', description: 'Stage 3 - Primary: Order Giraffes (Numbers < 1000)', type: 'orderByHeight', data: { rangeMax: 999 } },
+        secondary: { id: 's3s1', description: 'Stage 3 - Secondary: Find Missing Number (Numbers < 1000)', type: 'findMissingNumber', data: { rangeMax: 999 } },
+        tertiary: {
+          id: 's3t1',
+          description: 'Stage 3 - Tertiary: Compare Giraffes with Symbols',
+          type: 'binaryComparisonSymbols',
+          data: {
+            questionText: "How does giraffe A compare to giraffe B?",
+            rangeMax: 999,
+            options: [
+              { id: 'gt', label: '>' },
+              { id: 'lt', label: '<' },
+              { id: 'eq', label: '=' }
+            ]
+          }
+        }
+      }
     },
   }),
   getters: {
@@ -74,8 +92,7 @@ export const useGameStore = defineStore('game', {
       if (this.hasNextStage) {
         this.currentStage++
       } else {
-        // Optionally handle game completion or loop back
-        // console.log('Game completed or no next stage defined.')
+        this.currentStage = 1;
       }
     },
     setStage(stageNumber: number) {
