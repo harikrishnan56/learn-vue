@@ -280,44 +280,56 @@ const resetTertiaryQuizAnimationState = () => {
 const generateTertiaryQuizData = () => {
   const tertiaryTask = stageTasks.value?.tertiary
   if (!tertiaryTask || tertiaryTask.type !== 'comparisonQuiz') return
-  
-  // Get question text from task configuration
+
   tertiaryQuestionText.value = tertiaryTask.data?.questionText || "Who is the tallest Giraffe?"
-  
-  // Generate 4 giraffes with different heights
+
   const giraffeCount = 4
-  const labels = ['A', 'B', 'C', 'D']
-  const newGiraffes: Array<GiraffeDisplayState & { label: string }> = []
+  const baseDisplayLabels = ['A', 'B', 'C', 'D'] // Visual labels for displayed giraffes/options
+  const tempGiraffes: Array<{ id: string; height: number }> = []
   const usedHeights = new Set<number>()
-  
+
   for (let i = 0; i < giraffeCount; i++) {
     let rawHeight
     do {
       rawHeight = Math.floor(Math.random() * 20) + 5
     } while (usedHeights.has(rawHeight))
     const height = rawHeight * 10
-    
     usedHeights.add(rawHeight)
-    newGiraffes.push({
+    tempGiraffes.push({
       id: `tertiary-g-${Date.now()}-${i}-${Math.random().toString(36).substring(7)}`,
       height,
-      label: labels[i],
-      speechText: null,
-      currentMood: 'happy'
     })
   }
-  
-  // Sort giraffes by height to find the tallest
-  const sortedGiraffes = [...newGiraffes].sort((a, b) => b.height - a.height)
-  const tallestGiraffe = sortedGiraffes[0]
-  correctTertiaryAnswerId.value = tallestGiraffe.id
-  
-  tertiaryQuizGiraffes.value = newGiraffes
-  tertiaryGiraffesVisible.value = new Array(newGiraffes.length).fill(false)
-  
-  // Set options from task configuration or use default A, B, C, D
-  tertiaryOptions.value = tertiaryTask.data?.options || 
-    labels.map(label => ({ id: `opt${label}`, label }))
+
+  const shuffledDisplayGiraffes = [...tempGiraffes].sort(() => Math.random() - 0.5)
+
+  tertiaryQuizGiraffes.value = shuffledDisplayGiraffes.map(g => ({
+    ...g,
+    label: '', // This will store the visual label 'A', 'B', 'C', or 'D'
+    speechText: null,
+    currentMood: 'happy',
+  }))
+
+  let tallestGiraffeDisplayLabel: string | null = null
+  let maxHeight = -1
+  const newOptions: Array<{ id: string; label: string }> = []
+
+  tertiaryQuizGiraffes.value.forEach((giraffe, index) => {
+    const displayLabel = baseDisplayLabels[index]
+    giraffe.label = displayLabel // Assign 'A', 'B', 'C', 'D' based on visual/shuffled order
+
+    newOptions.push({ id: displayLabel, label: displayLabel })
+
+    if (giraffe.height > maxHeight) {
+      maxHeight = giraffe.height
+      tallestGiraffeDisplayLabel = displayLabel
+    }
+  })
+
+  tertiaryOptions.value = newOptions
+  correctTertiaryAnswerId.value = tallestGiraffeDisplayLabel // Now 'A', 'B', 'C', or 'D'
+
+  tertiaryGiraffesVisible.value = new Array(tertiaryQuizGiraffes.value.length).fill(false)
 }
 
 const startTertiaryQuizAnimation = () => {
@@ -600,67 +612,56 @@ function getGiraffeSpeechText(id: string): string | null {
 function handleTertiaryOptionSelect(optionId: string) {
   showTertiaryQuestionModal.value = false
   selectedTertiaryOption.value = optionId
+
+  const isCorrect = optionId === correctTertiaryAnswerId.value
+
+  // Hide current speech bubbles (which show heights) before showing feedback
+  showSpeechBubblesGlobal.value = false
   
-  // Find the giraffe corresponding to the selected option
-  const selectedGiraffeLabel = tertiaryOptions.value.find(opt => opt.id === optionId)?.label
-  const selectedGiraffe = tertiaryQuizGiraffes.value.find(g => g.label === selectedGiraffeLabel)
-  
-  // Check if the answer is correct
-  const isCorrect = selectedGiraffe?.id === correctTertiaryAnswerId.value
-  
-  // First phase: show just the labels
-  showSpeechBubblesGlobal.value = true
-  
-  // After a delay, update speech bubbles with feedback
   setTimeout(() => {
-    showSpeechBubblesGlobal.value = false
+    // Update speech bubbles with feedback
+    giraffeDisplayStates.value = tertiaryQuizGiraffes.value.map(g => {
+      let text = ''
+      let mood: 'happy' | 'confused' | 'idle' | 'sad' = 'happy'
+      
+      if (isCorrect) {
+        if (g.label === correctTertiaryAnswerId.value) { // This giraffe is the one correctly identified as tallest
+          text = "I'm the tallest!"
+          mood = 'happy'
+        } else {
+          text = "That's right!" // Other giraffes when answer is correct
+          mood = 'happy'
+        }
+      } else {
+        // Incorrect answer
+        if (g.label === correctTertiaryAnswerId.value) { // This is the actual tallest one, but user missed it
+          text = "I'm actually the tallest!"
+          mood = 'confused'
+        } else if (g.label === optionId) { // This is the giraffe the user incorrectly selected
+          text = "Hmm..."
+          mood = 'sad'
+        } else { // Other giraffes
+          text = "Not quite!"
+          mood = 'confused'
+        }
+      }
+      
+      return {
+        id: g.id,
+        height: g.height, // Keep height for consistency with GiraffeDisplayState
+        speechText: text,
+        currentMood: mood,
+        // label: g.label // giraffe object in tertiaryQuizGiraffes already has .label
+      }
+    })
+    
+    showSpeechBubblesGlobal.value = true // Show new feedback bubbles
     
     setTimeout(() => {
-      // Update speech bubbles with feedback
-      giraffeDisplayStates.value = tertiaryQuizGiraffes.value.map(g => {
-        let text = ''
-        let mood: 'happy' | 'confused' | 'idle' | 'sad' = 'happy'
-        
-        if (isCorrect) {
-          // Correct answer feedback
-          if (g.id === correctTertiaryAnswerId.value) {
-            text = "I'm the tallest!"
-            mood = 'happy'
-          } else {
-            text = "That's right!"
-            mood = 'happy'
-          }
-        } else {
-          // Incorrect answer feedback
-          if (g.id === correctTertiaryAnswerId.value) {
-            text = "I'm actually the tallest!"
-            mood = 'confused'
-          } else if (g.id === selectedGiraffe?.id) {
-            text = "Hmm..."
-            mood = 'sad'
-          } else {
-            text = "Try again!"
-            mood = 'confused'
-          }
-        }
-        
-        return {
-          id: g.id,
-          height: g.height,
-          speechText: text,
-          currentMood: mood
-        }
-      })
-      
-      showSpeechBubblesGlobal.value = true
-      
-      // Show feedback overlay after a delay
-      setTimeout(() => {
-        overlayType.value = isCorrect ? 'success' : 'error'
-        showResultOverlay.value = true
-      }, 1500)
-    }, 500)
-  }, 1000)
+      overlayType.value = isCorrect ? 'success' : 'error'
+      showResultOverlay.value = true
+    }, 1500)
+  }, 500) // Short delay to allow old bubbles to disappear
 }
 
 onMounted(() => {
