@@ -20,7 +20,7 @@ import BaseButton from './BaseButton.vue'
 interface Props {
   visible: boolean
   type?: 'success' | 'error'
-  gameMode?: 'orderByHeight' | 'findMissingNumber' | 'comparisonQuiz' | 'binaryComparisonSymbols' | 'orderByTownPopulation'
+  gameMode?: 'orderByHeight' | 'findMissingNumber' | 'comparisonQuiz' | 'binaryComparisonSymbols' | 'orderByTownPopulation' | 'findTownPopulation'
 }
 
 const props = withDefaults(defineProps<Props>(), { 
@@ -34,27 +34,32 @@ const message = computed(() => {
   if (props.type === 'success') {
     return props.gameMode === 'orderByTownPopulation'
       ? 'You ordered the towns correctly!'
-      : props.gameMode === 'orderByHeight'
-        ? 'The giraffes are now in order.'
-        : props.gameMode === 'findMissingNumber'
-          ? 'You found the correct number!'
-          : props.gameMode === 'binaryComparisonSymbols'
-            ? 'You compared the giraffes correctly!'
-            : 'You found the correct answer!'
+      : props.gameMode === 'findTownPopulation'
+        ? 'You found the new town\'s population!'
+        : props.gameMode === 'orderByHeight'
+          ? 'The giraffes are now in order.'
+          : props.gameMode === 'findMissingNumber'
+            ? 'You found the correct number!'
+            : props.gameMode === 'binaryComparisonSymbols'
+              ? 'You compared the giraffes correctly!'
+              : 'You found the correct answer!'
   } else {
     return props.gameMode === 'orderByTownPopulation'
       ? 'That\'s not the right order. Try again!'
-      : props.gameMode === 'orderByHeight'
-        ? 'The giraffes are still mixed up!'
-        : props.gameMode === 'findMissingNumber'
-          ? 'That\'s not the right number. Try again!'
-          : props.gameMode === 'binaryComparisonSymbols'
-            ? 'That\'s not the right comparison. Try again!'
-            : 'That\'s not the right answer. Try again!'
+      : props.gameMode === 'findTownPopulation'
+        ? 'That\'s not the right population. Try again!'
+        : props.gameMode === 'orderByHeight'
+          ? 'The giraffes are still mixed up!'
+          : props.gameMode === 'findMissingNumber'
+            ? 'That\'s not the right number. Try again!'
+            : props.gameMode === 'binaryComparisonSymbols'
+              ? 'That\'s not the right comparison. Try again!'
+              : 'That\'s not the right answer. Try again!'
   }
 })
 
 const buttonLabel = computed(() => props.type === 'success' ? 'Continue' : 'Try Again')
+
 const bgColor = computed(() => props.type === 'success' ? '#3A8737' : '#C24545')
 
 const emit = defineEmits<{

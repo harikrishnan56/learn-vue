@@ -36,7 +36,7 @@ const route = useRoute()
 const gameStore = useGameStore()
 const stage = computed(() => gameStore.currentStage)
 const stageTasks = computed(() => gameStore.getCurrentStageTasks)
-const gameMode = ref<'orderByHeight' | 'findMissingNumber' | 'comparisonQuiz' | 'binaryComparisonSymbols' | 'orderByTownPopulation'>('orderByHeight')
+const gameMode = ref<'orderByHeight' | 'findMissingNumber' | 'comparisonQuiz' | 'binaryComparisonSymbols' | 'orderByTownPopulation' | 'findTownPopulation'>('orderByHeight')
 const stageParam = route.query.stage ? parseInt(route.query.stage as string) : NaN
 if (!isNaN(stageParam)) {
   gameStore.setStage(stageParam)
@@ -620,16 +620,26 @@ const handleNumberSelect = (displayValue: number) => {
 
 function onContinue() {
   showResultOverlay.value = false
-  showSpeechBubblesGlobal.value = false // General speech bubble flag
+  showSpeechBubblesGlobal.value = false
   
   if (gameMode.value === 'orderByTownPopulation') {
-    showTownSpeechBubbles.value = false // Specifically for towns
+    showTownSpeechBubbles.value = false
+    if (overlayType.value === 'success') {
+      const secondaryTask = stageTasks.value?.secondary
+      if (secondaryTask?.type === 'findMissingNumber') {
+        secondaryObjectiveText.value = 'New town of giraffes have joined!'
+        showSecondaryObjective.value = true
+      } else {
+        gameStore.advanceStage()
+        gameMode.value = 'orderByHeight'
+      }
+    }
+  } else if (gameMode.value === 'findTownPopulation') {
     if (overlayType.value === 'success') {
       gameStore.advanceStage()
-      gameMode.value = 'orderByHeight' // Or next appropriate mode
+      gameMode.value = 'orderByHeight'
     } else {
-      // If error, townsOnScreen should already be showing initialTownData
-      // No need to change townsOnScreen, just ensure bubbles are off
+      showTownPopulationQuestion.value = true
     }
   } else if (gameMode.value === 'orderByHeight') {
     if (overlayType.value === 'success') {
@@ -668,7 +678,72 @@ function onContinue() {
 
 function handleSecondaryComplete() {
   showSecondaryObjective.value = false
-  gameMode.value = 'findMissingNumber'
+  
+  if (gameMode.value === 'orderByTownPopulation') {
+    generateTownPopulationQuestion()
+    gameMode.value = 'findTownPopulation'
+  } else if (gameMode.value === 'orderByHeight') {
+    gameMode.value = 'findMissingNumber'
+  }
+}
+
+// Town population missing number state
+const townPopulationQuestion = ref<{
+  townA: { label: string, population: number },
+  townB: { label: string, population: number },
+  townC: { label: string, correctPopulation: number }
+} | null>(null)
+
+const townPopulationOptions = ref<number[]>([])
+const showTownPopulationQuestion = ref(false)
+
+function generateTownPopulationQuestion() {
+  const allTowns = initialTownData.value
+  if (allTowns.length < 2) return
+  
+  showTownPopulationQuestion.value = false // Ensure modal is hidden initially
+
+  const shuffledTowns = [...allTowns].sort(() => Math.random() - 0.5)
+  const townA = shuffledTowns[0]
+  const townB = shuffledTowns[1]
+  
+  const avgPopulation = Math.floor((townA.population + townB.population) / 2)
+  const varianceFactor = 0.2 
+  const variance = Math.floor(avgPopulation * varianceFactor)
+  const correctPopulation = avgPopulation + Math.floor(Math.random() * variance * 2) - variance
+  
+  townPopulationQuestion.value = {
+    townA: { label: townA.label, population: townA.population },
+    townB: { label: townB.label, population: townB.population },
+    townC: { label: 'New Town', correctPopulation } // Changed label to 'New Town'
+  }
+  
+  const options = [correctPopulation]
+  while (options.length < 3) {
+    const optionVariance = Math.floor(variance * (1 + Math.random()))
+    const candidate = correctPopulation + (Math.random() > 0.5 ? optionVariance : -optionVariance)
+    if (candidate <= 0 || options.includes(candidate) || candidate === townA.population || candidate === townB.population) continue
+    options.push(candidate)
+  }
+  
+  townPopulationOptions.value = options.sort(() => Math.random() - 0.5)
+  
+  // Delay showing the question modal by 2 seconds after town displays are assumed visible
+  setTimeout(() => {
+    showTownPopulationQuestion.value = true
+  }, 2000) 
+}
+
+function handleTownPopulationSelect(selectedNumber: number) {
+  if (!townPopulationQuestion.value) return
+  
+  const isCorrect = selectedNumber === townPopulationQuestion.value.townC.correctPopulation
+  showTownPopulationQuestion.value = false
+  
+  setTimeout(() => {
+    overlayType.value = isCorrect ? 'success' : 'error'
+    showResultOverlay.value = true
+  }, 1000)
 }
 
 function handleMissingNumberSelect(selectedNumber: number) {
@@ -691,35 +766,17 @@ function handleMissingNumberSelect(selectedNumber: number) {
         const total = missingNumberGiraffes.value.length
         
         if (isCorrect) {
-          if (index === 0) {
-            text = "I'm the shortest"
-          } else if (index === total - 1) {
-            text = "I'm the tallest!"
-          } else if (index === 1) {
-            const firstValue = missingNumberGiraffes.value[0].displayValue
-            text = `I'm taller than ${firstValue}`
-          } else if (index === total - 2) {
-            const prev = missingNumberGiraffes.value[index - 1].displayValue
-            const next = missingNumberGiraffes.value[index + 1].displayValue
-            text = `I'm between ${prev} & ${next}`
-          }
-          mood = 'happy'
+          if (index === 0) text = "I'm the smallest";
+          else if (index === total - 1) text = "I'm the tallest!";
+          else text = `I'm correctly placed!`;
+          mood = 'happy';
         } else {
           if (giraffe.displayValue === '?') {
-            const prevGiraffe = index > 0 ? missingNumberGiraffes.value[index - 1] : null
-            const nextGiraffe = index < total - 1 ? missingNumberGiraffes.value[index + 1] : null
-            
-            if (prevGiraffe && nextGiraffe) {
-              text = `I should be between ${prevGiraffe.displayValue} & ${nextGiraffe.displayValue}`
-            } else if (prevGiraffe) {
-              text = `I should be taller than ${prevGiraffe.displayValue}`
-            } else if (nextGiraffe) {
-              text = `I should be shorter than ${nextGiraffe.displayValue}`
-            }
-            mood = 'sad'
+             text = `That's not my number!`;
+             mood = 'sad';
           } else {
-            text = `I'm ${giraffe.displayValue}`
-            mood = 'confused'
+             text = `I'm ${giraffe.displayValue}`;
+             mood = 'confused';
           }
         }
         return { id: giraffe.id, height: giraffe.height, speechText: text, currentMood: mood }
@@ -1047,7 +1104,13 @@ onMounted(() => {
     <div v-if="gameMode === 'findMissingNumber'" class="fixed bottom-0 left-0 right-0 z-10">
       <GameControls :controls-visible="showFindNumControlsShell" :show-interactive-content="false" />
       <div class="absolute bottom-0 left-0 right-0">
-        <QuestionModal :visible="showQuestionModal" :options="missingNumberOptions" @select="handleMissingNumberSelect" class="w-full" />
+        <QuestionModal 
+          :visible="showQuestionModal" 
+          :options="missingNumberOptions" 
+          :question-text="stageTasks?.secondary?.data?.questionText || 'Find the missing number'" 
+          @select="handleMissingNumberSelect" 
+          class="w-full" 
+        />
       </div>
     </div>
     
@@ -1083,6 +1146,40 @@ onMounted(() => {
       </div>
     </div>
     
+    <!-- Container for Find Town Population stage -->
+    <div v-if="gameMode === 'findTownPopulation' && townPopulationQuestion" class="pt-[76px] h-[calc(100vh-76px)] relative flex flex-col items-center justify-between">
+      <div class="w-full flex flex-col items-center space-y-4 pt-12">
+        <div class="flex justify-around items-end w-full px-4 sm:px-8">
+          <TownDisplay 
+            :town="{id: townPopulationQuestion.townA.label, label: townPopulationQuestion.townA.label, population: townPopulationQuestion.townA.population, giraffeCount: 3}" 
+          />
+          <div class="flex flex-col items-center mx-2">
+            <div class="px-4 py-1 bg-green-600 text-white rounded-md mb-2 text-sm">New Town</div>
+            <Giraffe :height="120" :head-size="35" :body-width="25" displayMode="full" :visible="true" />
+            <div class="mt-2 text-xl font-semibold text-[#3A8737] bg-[#4FAB4C] bg-opacity-50 px-4 py-2 rounded-lg shadow-md">
+              ?
+            </div>
+          </div>
+          <TownDisplay 
+            :town="{id: townPopulationQuestion.townB.label, label: townPopulationQuestion.townB.label, population: townPopulationQuestion.townB.population, giraffeCount: 3}" 
+          />
+        </div>
+      </div>
+
+      <div class="w-full fixed bottom-0 left-0 right-0 z-10">
+        <GameControls :controls-visible="true" :show-interactive-content="false" />
+        <div class="absolute bottom-0 left-0 right-0">
+          <QuestionModal 
+            :visible="showTownPopulationQuestion"
+            :options="townPopulationOptions"
+            :question-text="stageTasks?.secondary?.data?.questionText || 'What could be the population of the New town?'"
+            @select="handleTownPopulationSelect"
+            class="w-full"
+          />
+        </div>
+      </div>
+    </div>
+
     <!-- Container for Town population ordering stage -->
     <div v-if="gameMode === 'orderByTownPopulation'" class="absolute top-[100px] sm:top-[100px] bottom-[177px] sm:bottom-[200px] left-0 right-0 flex flex-col">
       <div class="flex-1 flex flex-col w-full">

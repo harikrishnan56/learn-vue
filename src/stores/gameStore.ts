@@ -112,7 +112,15 @@ export const useGameStore = defineStore('game', {
               towns: townData
             } 
           },
-          secondary: null,
+          secondary: {
+            id: 's4s1',
+            description: 'Stage 4 - Secondary: Find Missing Town Population',
+            type: 'findMissingNumber',
+            data: {
+              questionText: 'What could be the population of the new town?',
+              rangeMax: 5000
+            }
+          },
           tertiary: null
         }
       },
