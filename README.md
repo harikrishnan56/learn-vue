@@ -10,7 +10,7 @@ To set up the project locally, follow these steps:
 
 1.  **Clone the repository:**
     ```sh
-    git clone <repository-url>
+    git clone https://github.com/hk-vk/giraff-game-comini
     cd giraff-game
     ```
 
@@ -30,15 +30,7 @@ To set up the project locally, follow these steps:
     npm run build
     ```
 
-5.  **Run tests:**
-    ```sh
-    # Unit tests
-    npm run test:unit
 
-    # End-to-End tests (install Playwright browsers first if needed)
-    # npx playwright install
-    npm run test:e2e
-    ```
 
 ## Folder Structure
 
@@ -62,14 +54,13 @@ The project follows a standard Vue 3 + Vite project structure:
 
 ## Design Approach
 
-The Giraffe Game is designed with a focus on:
+The development of the Giraffe Game followed an iterative and component-driven approach:
 
--   **Modularity:** Components are kept small and focused, promoting reusability and maintainability.
--   **Reactivity:** Vue 3's Composition API and Pinia are used for efficient state management and reactive UI updates.
--   **User Experience:** The game aims to be intuitive and engaging, with clear visual feedback and smooth transitions.
--   **Scalability:** The structure allows for easy addition of new levels, features, and game mechanics.
--   **Styling:** Tailwind CSS is utilized for rapid UI development with utility-first classes, ensuring consistency and responsiveness.
--   **Testing:** Unit tests (Vitest) and E2E tests (Playwright) are included to ensure code quality and application stability.
+-   **Initial Component Prototyping:** The process began with creating the foundational Vue components necessary for the game's core functionality.
+-   **Refinement through Abstraction:** Early on, it was observed that several components shared similar structures or behaviors. This led to a refactoring phase where common patterns were abstracted into reusable, modular components. This involved carefully dividing UI elements and logic into distinct components to improve maintainability and reduce code duplication.
+-   **Enhancing User Experience with Animations:** To create a more dynamic and engaging experience, animations were incorporated using Vue's built-in `<Transition>` components. Effects like "fade", "slide-up", and "slide" are used to provide smooth visual feedback for user interactions and changes in game state. These transitions are defined using standard CSS within the component styles or global stylesheets.
+-   **State Management with Pinia:** Pinia was chosen for centralized state management, providing a clear and organized way to handle shared game data, such as the current stage and task configurations.
+-   **Utility-First Styling with Tailwind CSS:** Tailwind CSS facilitates rapid UI development and ensures a consistent visual style across the application.
 
 ## Recommended IDE Setup
 
