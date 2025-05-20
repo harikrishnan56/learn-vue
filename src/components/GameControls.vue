@@ -254,6 +254,8 @@ const getDisplayNumber = (button: GiraffeButtonData) => {
               width="w-full"
               :disabled="isDragging"
               @click="handleCheck"
+              @touchstart="handleCheck"
+              @touchend="() => {}"
             />
           </div>
         </div>

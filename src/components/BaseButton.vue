@@ -17,7 +17,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'click'): void,
-  
+  (e: 'touchstart'): void,
+  (e: 'touchend'): void,
 }>()
 
 const buttonClasses = computed(() => {
@@ -42,12 +43,27 @@ function handleClick() {
     emit('click')
   }
 }
+
+function handleTouchStart() {
+  if (!props.disabled) {
+    emit('touchstart')
+  }
+}
+
+function handleTouchEnd() {
+  if (!props.disabled) {
+    emit('click')
+    emit('touchend')
+  }
+}
 </script>
 
 <template>
   <button 
     :class="[buttonClasses, props.width, { 'opacity-50 cursor-not-allowed': props.disabled }]" 
     @click="handleClick" 
+    @touchstart="handleTouchStart"
+    @touchend="handleTouchEnd"
     :disabled="disabled"
   >
     <span v-if="icon">
