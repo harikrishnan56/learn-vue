@@ -37,7 +37,7 @@ function handleCountdownComplete() {
     ]"
   >
     <div class="bg-brand-white rounded-[20px] w-full max-w-[360px] mx-4 p-6">
-      <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center justify-start space-x-4 mb-8">
         <button 
           @click="handleClose"
           class="w-10 h-10 rounded-full bg-brand-gray-light flex items-center justify-center hover:bg-brand-gray-border transition-colors"
@@ -50,8 +50,8 @@ function handleCountdownComplete() {
         <h2 class="text-xl font-gabarito font-bold">The Tall Giraffe</h2>
       </div>
 
-      <div class="bg-brand-gray-light rounded-[10px] p-4">
-        <h3 class="font-gabarito font-bold mb-4 text-brand-black">Compare the numbers and find out who is taller!</h3>
+      <div class="bg-brand-gray-light rounded-[10px] p-4 text-left">
+        <h3 class="block w-full font-gabarito font-bold mb-4 text-brand-black text-left" style="text-align: left !important;">Compare the numbers and find out who is taller!</h3>
         <div class="bg-brand-white rounded-[10px] h-[200px] mb-4"></div>
         <BaseButton
           label="Let's go!"
