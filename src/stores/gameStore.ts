@@ -51,7 +51,7 @@ function generateTownPopulations(): TownData[] {
     });
   }
 
-  return towns.sort(() => Math.random() - 0.5);
+  return towns;
 }
 
 export const useGameStore = defineStore('game', {

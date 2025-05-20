@@ -11,12 +11,18 @@ interface GiraffeButtonData {
   originalIndex: number
 }
 
+interface TownPopulationsDisplayData {
+  pop1: number;
+  pop2: number;
+}
+
 interface Props {
   giraffeHeightsData?: { id: string; height: number }[]
   controlsVisible?: boolean
   buttonsVisible?: boolean
   showInteractiveContent?: boolean
   binaryLabels?: Array<'A' | 'B'>
+  townPopulationsForDisplay?: TownPopulationsDisplayData | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -24,7 +30,8 @@ const props = withDefaults(defineProps<Props>(), {
   controlsVisible: true,
   buttonsVisible: true,
   showInteractiveContent: true,
-  binaryLabels: () => []
+  binaryLabels: () => [],
+  townPopulationsForDisplay: null
 })
 
 const selectedNumberValue = ref<number | null>(null)
@@ -198,9 +205,19 @@ const getDisplayNumber = (button: GiraffeButtonData) => {
         @touchmove.prevent="onTouchMove" 
         @touchend.prevent="onTouchEnd"
       >
+        <!-- Town Populations Display - shown for findTownPopulation mode -->
+        <div 
+          v-if="props.townPopulationsForDisplay && !props.showInteractiveContent"
+          class="w-full flex justify-around items-center bg-[#83CA54] py-3 px-4 sm:px-8 text-xl font-semibold text-white mb-4 rounded-md"
+        >
+          <div>{{ props.townPopulationsForDisplay.pop1 }}</div>
+          <div class="text-2xl">?</div>
+          <div>{{ props.townPopulationsForDisplay.pop2 }}</div>
+        </div>
+
         <!-- Binary Labels - shown only in binary comparison mode (no interactive content) -->
         <div 
-          v-if="props.binaryLabels && props.binaryLabels.length > 0 && !props.showInteractiveContent"
+          v-if="props.binaryLabels && props.binaryLabels.length > 0 && !props.showInteractiveContent && !props.townPopulationsForDisplay"
           class="flex justify-around items-center w-full max-w-xl mx-auto mb-2" 
         >
           <BinaryComparisonLabel 
@@ -208,6 +225,10 @@ const getDisplayNumber = (button: GiraffeButtonData) => {
             :key="label" 
             :label="label"
           />
+        </div>
+
+        <div v-if="!props.showInteractiveContent">
+          <slot name="modalContent"></slot>
         </div>
 
         <!-- Interactive Controls - shown only in orderByHeight mode -->

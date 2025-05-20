@@ -7,13 +7,22 @@ const props = withDefaults(defineProps<{
   mood?: 'happy'|'sad'|'confused'|'idle'
   speechText?: string|null
   showSpeechBubble?: boolean
+  showPopulationInLabel?: boolean
+  hideLabelText?: boolean
 }>(),{
   mood: 'happy',
   speechText: null,
-  showSpeechBubble: false
+  showSpeechBubble: false,
+  showPopulationInLabel: true,
+  hideLabelText: false
 })
 const giraffeHeights = computed(()=>[100, 160, 80])
-const label = computed(()=>`${props.town.label} - ${props.town.population}`)
+const label = computed(() => {
+  if (props.showPopulationInLabel) {
+    return `${props.town.label} - ${props.town.population}`
+  } 
+  return props.town.label
+})
 </script>
 
 <template>
@@ -42,7 +51,7 @@ const label = computed(()=>`${props.town.label} - ${props.town.population}`)
         displayMode="full"
       />
     </div>
-    <div class="mt-2 text-sm sm:text-xl font-semibold text-[#3A8737] bg-[#4FAB4C] bg-opacity-50 px-2 sm:px-4 py-1 sm:py-2 rounded-lg shadow-md">
+    <div v-if="!props.hideLabelText" class="mt-2 text-sm sm:text-xl font-semibold text-[#3A8737] bg-[#4FAB4C] bg-opacity-50 px-2 sm:px-4 py-1 sm:py-2 rounded-lg shadow-md">
       {{ label }}
     </div>
   </div>

@@ -689,46 +689,61 @@ function handleSecondaryComplete() {
 
 // Town population missing number state
 const townPopulationQuestion = ref<{
-  townA: { label: string, population: number },
-  townB: { label: string, population: number },
+  townA: { id: string, label: string, population: number },
+  townB: { id: string, label: string, population: number },
   townC: { label: string, correctPopulation: number }
 } | null>(null)
 
 const townPopulationOptions = ref<number[]>([])
 const showTownPopulationQuestion = ref(false)
 
+// Speech bubbles for findTownPopulation mode
+const findTownPopulationSpeechBubblesVisible = ref(false)
+const findTownPopulationSpeechData = ref<Array<{id: string, text: string | null, mood: 'happy' | 'sad' | 'confused' | 'idle'}>>([])
+
 function generateTownPopulationQuestion() {
   const allTowns = initialTownData.value
   if (allTowns.length < 2) return
   
-  showTownPopulationQuestion.value = false // Ensure modal is hidden initially
+  showTownPopulationQuestion.value = false
+  findTownPopulationSpeechBubblesVisible.value = false // Reset before showing new ones
 
   const shuffledTowns = [...allTowns].sort(() => Math.random() - 0.5)
-  const townA = shuffledTowns[0]
-  const townB = shuffledTowns[1]
+  const townA_full = shuffledTowns[0] // Has id, label, population, giraffeCount
+  const townB_full = shuffledTowns[1] // Has id, label, population, giraffeCount
   
-  const avgPopulation = Math.floor((townA.population + townB.population) / 2)
+  const avgPopulation = Math.floor((townA_full.population + townB_full.population) / 2)
   const varianceFactor = 0.2 
   const variance = Math.floor(avgPopulation * varianceFactor)
-  const correctPopulation = avgPopulation + Math.floor(Math.random() * variance * 2) - variance
-  
+  let correctPopulation = avgPopulation + Math.floor(Math.random() * variance * 2) - variance
+  if (correctPopulation <= 0) correctPopulation = Math.abs(correctPopulation) + 100;
+
   townPopulationQuestion.value = {
-    townA: { label: townA.label, population: townA.population },
-    townB: { label: townB.label, population: townB.population },
-    townC: { label: 'New Town', correctPopulation } // Changed label to 'New Town'
+    townA: { id: townA_full.id, label: townA_full.label, population: townA_full.population },
+    townB: { id: townB_full.id, label: townB_full.label, population: townB_full.population },
+    townC: { label: 'New Town', correctPopulation }
   }
   
   const options = [correctPopulation]
   while (options.length < 3) {
     const optionVariance = Math.floor(variance * (1 + Math.random()))
-    const candidate = correctPopulation + (Math.random() > 0.5 ? optionVariance : -optionVariance)
-    if (candidate <= 0 || options.includes(candidate) || candidate === townA.population || candidate === townB.population) continue
+    let candidate = correctPopulation + (Math.random() > 0.5 ? optionVariance : -optionVariance)
+    if (candidate <=0) candidate = Math.abs(candidate) + 50;
+    if (options.includes(candidate) || candidate === townA_full.population || candidate === townB_full.population) continue
     options.push(candidate)
   }
   
   townPopulationOptions.value = options.sort(() => Math.random() - 0.5)
   
-  // Delay showing the question modal by 2 seconds after town displays are assumed visible
+  if (townPopulationQuestion.value) {
+    findTownPopulationSpeechData.value = [
+      { id: townPopulationQuestion.value.townA.id, text: townPopulationQuestion.value.townA.label, mood: 'happy' },
+      { id: 'new-town-speech', text: townPopulationQuestion.value.townC.label, mood: 'happy' },
+      { id: townPopulationQuestion.value.townB.id, text: townPopulationQuestion.value.townB.label, mood: 'happy' }
+    ]
+    findTownPopulationSpeechBubblesVisible.value = true
+  }
+
   setTimeout(() => {
     showTownPopulationQuestion.value = true
   }, 2000) 
@@ -1147,36 +1162,56 @@ onMounted(() => {
     </div>
     
     <!-- Container for Find Town Population stage -->
-    <div v-if="gameMode === 'findTownPopulation' && townPopulationQuestion" class="pt-[76px] h-[calc(100vh-76px)] relative flex flex-col items-center justify-between">
-      <div class="w-full flex flex-col items-center space-y-4 pt-12">
-        <div class="flex justify-around items-end w-full px-4 sm:px-8">
-          <TownDisplay 
-            :town="{id: townPopulationQuestion.townA.label, label: townPopulationQuestion.townA.label, population: townPopulationQuestion.townA.population, giraffeCount: 3}" 
-          />
-          <div class="flex flex-col items-center mx-2">
-            <div class="px-4 py-1 bg-green-600 text-white rounded-md mb-2 text-sm">New Town</div>
-            <Giraffe :height="120" :head-size="35" :body-width="25" displayMode="full" :visible="true" />
-            <div class="mt-2 text-xl font-semibold text-[#3A8737] bg-[#4FAB4C] bg-opacity-50 px-4 py-2 rounded-lg shadow-md">
-              ?
-            </div>
-          </div>
-          <TownDisplay 
-            :town="{id: townPopulationQuestion.townB.label, label: townPopulationQuestion.townB.label, population: townPopulationQuestion.townB.population, giraffeCount: 3}" 
-          />
-        </div>
+    <div v-if="gameMode === 'findTownPopulation' && townPopulationQuestion" class="pt-[76px] h-[calc(100vh-76px)] relative flex flex-col items-center">
+      <!-- Town Displays with initial speech bubbles -->
+      <div class="w-full flex justify-around items-start pt-12 px-4 sm:px-8">
+        <TownDisplay 
+          :town="{id: townPopulationQuestion.townA.label, label: townPopulationQuestion.townA.label, population: townPopulationQuestion.townA.population, giraffeCount: 3}" 
+          :showPopulationInLabel="false"
+          :hideLabelText="true"
+          :speechText="findTownPopulationSpeechData.find(s => s.id === townPopulationQuestion.townA.id)?.text || null"
+          :mood="findTownPopulationSpeechData.find(s => s.id === townPopulationQuestion.townA.id)?.mood || 'happy'"
+          :showSpeechBubble="findTownPopulationSpeechBubblesVisible"
+        />
+        <TownDisplay 
+          :town="{id: 'new-town', label: townPopulationQuestion.townC.label, population: 0, giraffeCount: 3}" 
+          :showPopulationInLabel="false"
+          :hideLabelText="true"
+          :speechText="findTownPopulationSpeechData.find(s => s.id === 'new-town-speech')?.text || null"
+          :mood="findTownPopulationSpeechData.find(s => s.id === 'new-town-speech')?.mood || 'happy'"
+          :showSpeechBubble="findTownPopulationSpeechBubblesVisible"
+          class="mx-2"
+        />
+        <TownDisplay 
+          :town="{id: townPopulationQuestion.townB.label, label: townPopulationQuestion.townB.label, population: townPopulationQuestion.townB.population, giraffeCount: 3}" 
+          :showPopulationInLabel="false"
+          :hideLabelText="true"
+          :speechText="findTownPopulationSpeechData.find(s => s.id === townPopulationQuestion.townB.id)?.text || null"
+          :mood="findTownPopulationSpeechData.find(s => s.id === townPopulationQuestion.townB.id)?.mood || 'happy'"
+          :showSpeechBubble="findTownPopulationSpeechBubblesVisible"
+        />
       </div>
 
+      <!-- Spacer to push QuestionModal down if needed, or use justify-between on parent -->
+      <div class="flex-grow"></div>
+
+      <!-- Question Modal Area -->
       <div class="w-full fixed bottom-0 left-0 right-0 z-10">
-        <GameControls :controls-visible="true" :show-interactive-content="false" />
-        <div class="absolute bottom-0 left-0 right-0">
-          <QuestionModal 
-            :visible="showTownPopulationQuestion"
-            :options="townPopulationOptions"
-            :question-text="stageTasks?.secondary?.data?.questionText || 'What could be the population of the New town?'"
-            @select="handleTownPopulationSelect"
-            class="w-full"
-          />
-        </div>
+        <GameControls 
+          :controls-visible="true" 
+          :show-interactive-content="false" 
+          :townPopulationsForDisplay="townPopulationQuestion ? { pop1: townPopulationQuestion.townA.population, pop2: townPopulationQuestion.townB.population } : null"
+        >
+          <template #modalContent>
+            <QuestionModal 
+              :visible="showTownPopulationQuestion"
+              :options="townPopulationOptions"
+              :question-text="stageTasks?.secondary?.data?.questionText || 'What could be the population of the New town?'"
+              @select="handleTownPopulationSelect"
+              class="w-full"
+            />
+          </template>
+        </GameControls>
       </div>
     </div>
 
