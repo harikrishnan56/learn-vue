@@ -20,7 +20,7 @@ import BaseButton from './BaseButton.vue'
 interface Props {
   visible: boolean
   type?: 'success' | 'error'
-  gameMode?: 'orderByHeight' | 'findMissingNumber' | 'comparisonQuiz' | 'binaryComparisonSymbols'
+  gameMode?: 'orderByHeight' | 'findMissingNumber' | 'comparisonQuiz' | 'binaryComparisonSymbols' | 'orderByTownPopulation'
 }
 
 const props = withDefaults(defineProps<Props>(), { 
@@ -32,21 +32,25 @@ const title = computed(() => props.type === 'success' ? 'Awesome!' : 'Oh no!')
 
 const message = computed(() => {
   if (props.type === 'success') {
-    return props.gameMode === 'orderByHeight' 
-      ? 'The giraffes are now in order.'
-      : props.gameMode === 'findMissingNumber'
-        ? 'You found the correct number!'
-        : props.gameMode === 'binaryComparisonSymbols'
-          ? 'You compared the giraffes correctly!'
-          : 'You found the correct answer!'
+    return props.gameMode === 'orderByTownPopulation'
+      ? 'You ordered the towns correctly!'
+      : props.gameMode === 'orderByHeight'
+        ? 'The giraffes are now in order.'
+        : props.gameMode === 'findMissingNumber'
+          ? 'You found the correct number!'
+          : props.gameMode === 'binaryComparisonSymbols'
+            ? 'You compared the giraffes correctly!'
+            : 'You found the correct answer!'
   } else {
-    return props.gameMode === 'orderByHeight'
-      ? 'The giraffes are still mixed up!'
-      : props.gameMode === 'findMissingNumber'
-        ? 'That\'s not the right number. Try again!'
-        : props.gameMode === 'binaryComparisonSymbols'
-          ? 'That\'s not the right comparison. Try again!'
-          : 'That\'s not the right answer. Try again!'
+    return props.gameMode === 'orderByTownPopulation'
+      ? 'That\'s not the right order. Try again!'
+      : props.gameMode === 'orderByHeight'
+        ? 'The giraffes are still mixed up!'
+        : props.gameMode === 'findMissingNumber'
+          ? 'That\'s not the right number. Try again!'
+          : props.gameMode === 'binaryComparisonSymbols'
+            ? 'That\'s not the right comparison. Try again!'
+            : 'That\'s not the right answer. Try again!'
   }
 })
 
