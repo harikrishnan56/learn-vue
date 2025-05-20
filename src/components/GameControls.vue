@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 import { MoveHorizontal } from 'lucide-vue-next'
 import BaseButton from './BaseButton.vue'
-import GiraffeNumberButton from './GiraffeNumberButton.vue'
+import GameButton from './GameButton.vue'
 
 interface GiraffeButtonData {
   id: string
@@ -214,9 +214,11 @@ const getDisplayNumber = (button: GiraffeButtonData) => {
                     }
                   ]"
                 >
-                  <GiraffeNumberButton
-                    :number="getDisplayNumber(button)"
+                  <GameButton
+                    :value="getDisplayNumber(button)"
                     :selected="selectedNumberValue === getDisplayNumber(button)"
+                    variant="primary"
+                    draggable
                     @select="handleNumberSelect(button)"
                     @dragstart="(e) => onDragStart(e, button.id)"
                     @dragend="onDragEnd"

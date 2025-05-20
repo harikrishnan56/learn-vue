@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import GameButton from './GameButton.vue'
+
 interface Option {
   id: string
   label: string
@@ -31,16 +33,13 @@ function handleSelect(optionId: string) {
         {{ questionText }}
       </h2>
       <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
-        <button
+        <GameButton
           v-for="option in props.options"
           :key="option.id"
-          class="bg-white text-brand-green-answer hover:bg-giraffe-fill transition-colors duration-200 
-                 text-3xl font-gabarito font-semibold rounded-xl px-8 py-3 min-w-[80px] 
-                 border border-brand-green-light shadow-answer-option"
-          @click="handleSelect(option.id)"
-        >
-          {{ option.label }}
-        </button>
+          :value="option.label"
+          variant="tertiary"
+          @select="handleSelect(option.id)"
+        />
       </div>
     </div>
   </Transition>

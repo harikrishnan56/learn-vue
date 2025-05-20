@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import GiraffeNumberButton from './GiraffeNumberButton.vue'
+import GameButton from './GameButton.vue'
 
 interface Props {
   visible: boolean
@@ -27,10 +27,11 @@ function handleSelect(value: number) {
         What should be the number for the new giraffe?
       </h2>
       <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
-        <GiraffeNumberButton
+        <GameButton
           v-for="option in props.options"
           :key="option"
-          :number="option"
+          :value="option"
+          variant="secondary"
           @select="handleSelect(option)"
         />
       </div>
