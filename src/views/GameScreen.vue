@@ -11,6 +11,9 @@ import QuestionModal from '../components/QuestionModal.vue'
 import TertiaryQuestionModal from '../components/TertiaryQuestionModal.vue'
 import Giraffe from '../components/giraffe/Giraffe.vue'
 import BinaryComparisonLabel from '../components/BinaryComparisonLabel.vue'
+import type { TownData } from '../stores/gameStore'
+import TownDisplay from '../components/TownDisplay.vue'
+import TownOrderControls from '../components/TownOrderControls.vue'
 
 interface GiraffeData {
   id: string
@@ -33,10 +36,14 @@ const route = useRoute()
 const gameStore = useGameStore()
 const stage = computed(() => gameStore.currentStage)
 const stageTasks = computed(() => gameStore.getCurrentStageTasks)
-const gameMode = ref<'orderByHeight' | 'findMissingNumber' | 'comparisonQuiz' | 'binaryComparisonSymbols'>('orderByHeight')
+const gameMode = ref<'orderByHeight' | 'findMissingNumber' | 'comparisonQuiz' | 'binaryComparisonSymbols' | 'orderByTownPopulation'>('orderByHeight')
 const stageParam = route.query.stage ? parseInt(route.query.stage as string) : NaN
 if (!isNaN(stageParam)) {
   gameStore.setStage(stageParam)
+}
+const primaryTaskType = stageTasks.value?.primary?.type
+if (primaryTaskType === 'orderByTownPopulation') {
+  gameMode.value = 'orderByTownPopulation'
 }
 const showGameContent = ref(true)
 const isOverallCorrect = ref(false)
@@ -540,6 +547,10 @@ watch(gameMode, (newMode) => {
     startTertiaryQuizAnimation()
   } else if (newMode === 'binaryComparisonSymbols') {
     startBinaryComparisonAnimation()
+  } else if (newMode === 'orderByTownPopulation') {
+    const dataTowns = stageTasks.value?.primary?.data?.towns as TownData[] || []
+    townList.value = dataTowns.map(({ id, label }) => ({ id, label }))
+    currentOrder.value = townList.value.map(t => t.id)
   }
 });
 
@@ -639,6 +650,13 @@ function onContinue() {
     } else {
       showTertiaryQuestionModal.value = gameMode.value === 'comparisonQuiz'
       showBinaryComparisonQuestionModal.value = gameMode.value === 'binaryComparisonSymbols'
+    }
+  } else if (gameMode.value === 'orderByTownPopulation') {
+    if (overlayType.value === 'success') {
+      gameStore.advanceStage()
+      gameMode.value = 'orderByHeight'
+    } else {
+      showTownSpeechBubbles.value = false
     }
   }
 }
@@ -775,6 +793,44 @@ function handleTertiaryOptionSelect(optionId: string) {
   }, 500) // Short delay to allow old bubbles to disappear
 }
 
+// Town population ordering state and handlers
+const townList = ref<Pick<TownData,'id'|'label'>[]>([])
+const currentOrder = ref<string[]>([])
+const orderedTownData = computed(() => currentOrder.value.map(id => (stageTasks.value?.primary?.data?.towns as TownData[]).find(t => t.id === id)!))
+const showTownSpeechBubbles = ref(false)
+const townSpeechTexts = ref<(string | null)[]>([])
+const townMoods = ref<('happy'|'sad'|'confused'|'idle')[]>([])
+
+function handleTownOrderUpdated(newOrder: string[]) {
+  currentOrder.value = newOrder
+  showTownSpeechBubbles.value = false
+}
+
+function handleTownCheck() {
+  const ordered = orderedTownData.value
+  const populations = ordered.map(t => t.population)
+  const sorted = [...populations].sort((a, b) => a - b)
+  const isCorrect = JSON.stringify(populations) === JSON.stringify(sorted)
+  townSpeechTexts.value = ordered.map((town) => {
+    if (isCorrect) {
+      if (town.population === sorted[0]) return "I'm the smallest"
+      else if (town.population === sorted[sorted.length - 1]) return "I'm the largest!"
+      else {
+        const idx = sorted.indexOf(town.population)
+        const prev = sorted[idx - 1]
+        const next = sorted[idx + 1]
+        return `I'm between ${prev} & ${next}`
+      }
+    } else {
+      return 'Oh no!'
+    }
+  })
+  townMoods.value = townSpeechTexts.value.map((_, i) => isCorrect || populations[i] === sorted[i] ? 'happy' : 'sad')
+  showTownSpeechBubbles.value = true
+  overlayType.value = isCorrect ? 'success' : 'error'
+  showResultOverlay.value = true
+}
+
 onMounted(() => {
   resetOrderByHeightAnimationState(); resetFindMissingNumberAnimationState(); resetTertiaryQuizAnimationState(); resetBinaryComparisonAnimationState();
   if (gameMode.value === 'orderByHeight') {
@@ -785,6 +841,10 @@ onMounted(() => {
     startTertiaryQuizAnimation();
   } else if (gameMode.value === 'binaryComparisonSymbols') {
     startBinaryComparisonAnimation();
+  } else if (gameMode.value === 'orderByTownPopulation') {
+    const dataTowns = stageTasks.value?.primary?.data?.towns as TownData[] || []
+    townList.value = dataTowns.map(({ id, label }) => ({ id, label }))
+    currentOrder.value = townList.value.map(t => t.id)
   }
 })
 </script>
@@ -797,15 +857,17 @@ onMounted(() => {
       class="fixed top-0 left-0 right-0 z-10"
       :visible="showHeaderElements || gameMode !== 'orderByHeight'"
       :objective-text="
-        gameMode === 'findMissingNumber' ? 'Find the missing number for the new giraffe' : 
-        gameMode === 'comparisonQuiz' ? 'Let\'s compare more giraffes!' : 
+        gameMode === 'findMissingNumber' ? 'Find the missing number for the new giraffe' :
+        gameMode === 'comparisonQuiz' ? 'Let\'s compare more giraffes!' :
         gameMode === 'binaryComparisonSymbols' ? 'Compare giraffes A and B' :
+        gameMode === 'orderByTownPopulation' ? 'Order the giraffe towns based on their population' :
         'Order the giraffes based on their height'
       "
       :show-objective="
-        gameMode === 'findMissingNumber' ? findNumObjectiveAnimatingUp : 
-        gameMode === 'comparisonQuiz' ? tertiaryQuizObjectiveAnimatingUp : 
-        gameMode === 'binaryComparisonSymbols' ? binaryComparisonObjectiveAnimatingUp : 
+        gameMode === 'findMissingNumber' ? findNumObjectiveAnimatingUp :
+        gameMode === 'comparisonQuiz' ? tertiaryQuizObjectiveAnimatingUp :
+        gameMode === 'binaryComparisonSymbols' ? binaryComparisonObjectiveAnimatingUp :
+        gameMode === 'orderByTownPopulation' ? true :
         objectiveTextAnimatingUp
       "
     />
@@ -948,6 +1010,26 @@ onMounted(() => {
           class="w-full" 
         />
       </div>
+    </div>
+    
+    <!-- Container for Town population ordering stage -->
+    <div v-if="gameMode === 'orderByTownPopulation'" class="pt-[76px] h-[calc(100vh-76px)] relative flex flex-col items-center">
+      <div class="flex justify-around items-end w-full mx-auto max-w-xl mb-6">
+        <TownDisplay
+          v-for="(town, index) in orderedTownData"
+          :key="town.id"
+          :town="town"
+          :show-speech-bubble="showTownSpeechBubbles"
+          :speech-text="townSpeechTexts[index]"
+          :mood="townMoods[index]"
+        />
+      </div>
+      <TownOrderControls
+        :towns="townList"
+        :initialOrder="currentOrder"
+        @order-updated="handleTownOrderUpdated"
+        @check="handleTownCheck"
+      />
     </div>
     
     <FeedbackOverlay :visible="showResultOverlay" :type="overlayType" :game-mode="gameMode" @continue="onContinue" />
