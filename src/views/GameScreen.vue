@@ -1025,7 +1025,7 @@ onMounted(() => {
             :mood="townMoods[currentOrder.indexOf(town.id)]"
           />
         </div>
-        <div class="w-full bg-[#83CA54] pt-8 pb-8 flex justify-around">
+        <div class="w-full bg-[#83CA54] pt-8 pb-56 flex justify-around">
           <TownDisplay
             v-for="(town, index) in orderedTownData.slice(2, 4)"
             :key="town.id"
