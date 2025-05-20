@@ -37,7 +37,7 @@ const bodyHeight = () => {
   return props.height - (props.headSize * 0.7) // Overlap the head slightly
 }
 
-const bodyMargin = computed(() => `-${props.headSize * 0.3}px`)
+const bodyMargin = computed(() => `-${(props.headSize * 0.3) - 5}px`) // Move head 5px down
 </script>
 
 <template>
