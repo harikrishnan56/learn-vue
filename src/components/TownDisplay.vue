@@ -51,8 +51,11 @@ const label = computed(() => {
         displayMode="full"
       />
     </div>
-    <div v-if="!props.hideLabelText" class="mt-2 text-sm sm:text-xl font-semibold text-[#3A8737] bg-[#4FAB4C] bg-opacity-50 px-2 sm:px-4 py-1 sm:py-2 rounded-lg shadow-md">
-      {{ label }}
+    <div v-if="!props.hideLabelText" class="mt-2 flex flex-col items-center">
+      <div class="h-1 w-24 sm:w-32 bg-[#4FAB4C] rounded-full mb-1"></div>
+      <div class="font-bold text-[#4FAB4C] text-sm sm:text-xl">
+        {{ label }}
+      </div>
     </div>
   </div>
 </template>
