@@ -52,7 +52,7 @@ const label = computed(() => {
       />
     </div>
     <div v-if="!props.hideLabelText" class="mt-2 flex flex-col items-center">
-      <div class="h-1 w-24 sm:w-32 bg-[#4FAB4C] rounded-full mb-1"></div>
+      <div class="h-1 w-32 sm:w-40 bg-[#4FAB4C] rounded-full mb-1"></div>
       <div class="font-bold text-[#4FAB4C] text-sm sm:text-xl">
         {{ label }}
       </div>
@@ -61,5 +61,5 @@ const label = computed(() => {
 </template>
 
 <style scoped>
-/* Assuming .fade transitions are globally available or defined elsewhere if needed */
+
 </style>
