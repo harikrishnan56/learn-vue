@@ -3,13 +3,19 @@ import { defineStore } from 'pinia'
 export interface StageTaskDetail {
   id: string
   description: string
-  type?: 'orderByHeight' | 'findMissingNumber' | 'quiz' | 'comparisonQuiz' | 'binaryComparisonSymbols'
+  type?: 'orderByHeight' | 'findMissingNumber' | 'quiz' | 'comparisonQuiz' | 'binaryComparisonSymbols' | 'orderByTownPopulation'
   data?: any 
 }
 
 export interface ComparisonQuizData {
   questionText: string
   options: Array<{ id: string, label: string }>
+}
+
+export interface TownData {
+  id: string
+  label: string
+  population: number
 }
 
 export interface StageTasks {
@@ -21,11 +27,15 @@ export interface StageTasks {
 export interface GameState {
   currentStage: number
   stageTaskConfigurations: Record<number, StageTasks>
+  gameHeaderMessage: string | null
+  gameHeaderMessageType: 'primary' | 'secondary' | 'tertiary' | 'default'
 }
 
 export const useGameStore = defineStore('game', {
   state: (): GameState => ({
     currentStage: 1,
+    gameHeaderMessage: null,
+    gameHeaderMessageType: 'default',
     stageTaskConfigurations: {
       1: {
         primary: { id: 's1p1', description: 'Stage 1 - Primary: Order Giraffes', type: 'orderByHeight' },
@@ -67,6 +77,22 @@ export const useGameStore = defineStore('game', {
             ]
           }
         }
+      },
+      4: {
+        primary: { 
+          id: 's4p1', 
+          description: 'Stage 4 - Primary: Order towns by population', 
+          type: 'orderByTownPopulation',
+          data: {
+            towns: [
+              { id: 'town1', label: 'A', population: 120 },
+              { id: 'town2', label: 'B', population: 350 },
+              { id: 'town3', label: 'C', population: 210 }
+            ]
+          }
+        },
+        secondary: null,
+        tertiary: null
       }
     },
   }),
@@ -94,25 +120,37 @@ export const useGameStore = defineStore('game', {
       } else {
         this.currentStage = 1;
       }
+      this.gameHeaderMessage = null
+      this.gameHeaderMessageType = 'default'
     },
     setStage(stageNumber: number) {
       if (this.stageTaskConfigurations[stageNumber]) {
         this.currentStage = stageNumber
+        this.gameHeaderMessage = null
+        this.gameHeaderMessageType = 'default'
       } else {
         // console.warn(\`Stage ${stageNumber} configuration not found.\`)
       }
     },
     resetGame() {
       this.currentStage = 1
+      this.gameHeaderMessage = null
+      this.gameHeaderMessageType = 'default'
     },
     initializeStage(stageNumber: number) {
       if (this.stageTaskConfigurations[stageNumber]) {
         this.currentStage = stageNumber
+        this.gameHeaderMessage = null
+        this.gameHeaderMessageType = 'default'
       } else {
         // console.warn(\`Cannot initialize: Stage ${stageNumber} configuration not found.\`)
         // Fallback to stage 1 if requested stage doesn't exist
         this.currentStage = 1
       }
+    },
+    setGameHeaderMessage(message: string, type: 'primary' | 'secondary' | 'tertiary' | 'default' = 'default') {
+      this.gameHeaderMessage = message
+      this.gameHeaderMessageType = type
     },
     _updateStageTaskConfiguration(stageNumber: number, tasks: StageTasks) {
       this.stageTaskConfigurations[stageNumber] = tasks

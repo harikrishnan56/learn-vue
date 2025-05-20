@@ -1013,16 +1013,36 @@ onMounted(() => {
     </div>
     
     <!-- Container for Town population ordering stage -->
-    <div v-if="gameMode === 'orderByTownPopulation'" class="pt-[76px] h-[calc(100vh-76px)] relative flex flex-col items-center">
-      <div class="flex justify-around items-end w-full mx-auto max-w-xl mb-6">
-        <TownDisplay
-          v-for="(town, index) in orderedTownData"
-          :key="town.id"
-          :town="town"
-          :show-speech-bubble="showTownSpeechBubbles"
-          :speech-text="townSpeechTexts[index]"
-          :mood="townMoods[index]"
-        />
+    <div v-if="gameMode === 'orderByTownPopulation'" class="pt-[120px] h-[calc(100vh-76px)] relative flex flex-col items-center">
+      <div class="w-full max-w-md p-6 rounded-lg relative" style="background: linear-gradient(135deg, #83CA54, #77BA40);">
+        <!-- First row of towns -->
+        <div class="flex justify-around w-full mb-8">
+          <TownDisplay
+            v-for="(town, index) in orderedTownData.slice(0, 2)"
+            :key="town.id"
+            :town="town"
+            :show-speech-bubble="showTownSpeechBubbles && currentOrder.indexOf(town.id) < 2"
+            :speech-text="townSpeechTexts[currentOrder.indexOf(town.id)]"
+            :mood="townMoods[currentOrder.indexOf(town.id)]"
+          />
+        </div>
+        
+        <!-- Diagonal striped overlay for second row -->
+        <div class="absolute left-0 right-0 bottom-0 h-[50%] overflow-hidden pointer-events-none" style="z-index: 1;">
+          <div class="w-full h-full" style="background: repeating-linear-gradient(135deg, rgba(131, 202, 84, 0.6), rgba(131, 202, 84, 0.6) 10px, rgba(119, 186, 64, 0.6) 10px, rgba(119, 186, 64, 0.6) 20px);"></div>
+        </div>
+        
+        <!-- Second row of towns -->
+        <div class="flex justify-around w-full relative" style="z-index: 2;">
+          <TownDisplay
+            v-for="(town, index) in orderedTownData.slice(2, 4)"
+            :key="town.id"
+            :town="town"
+            :show-speech-bubble="showTownSpeechBubbles && currentOrder.indexOf(town.id) >= 2"
+            :speech-text="townSpeechTexts[currentOrder.indexOf(town.id)]"
+            :mood="townMoods[currentOrder.indexOf(town.id)]"
+          />
+        </div>
       </div>
     </div>
     

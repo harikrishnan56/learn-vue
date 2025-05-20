@@ -37,6 +37,7 @@ function startGameWithStage(stageNumber: number) {
         <BaseButton label="Play" variant="primary" width="w-full" @click="showPreview" />
         <BaseButton label="Level 2" variant="secondary" width="w-full" @click="startGameWithStage(2)" />
         <BaseButton label="Level 3" variant="secondary" width="w-full" @click="startGameWithStage(3)" />
+        <BaseButton label="Level 4 (Towns)" variant="secondary" width="w-full" @click="startGameWithStage(4)" />
       </div>
     </div>
 
