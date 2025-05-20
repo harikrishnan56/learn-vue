@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { MoveHorizontal } from 'lucide-vue-next'
 import BaseButton from './BaseButton.vue'
 import GameButton from './GameButton.vue'
+import BinaryComparisonLabel from './BinaryComparisonLabel.vue'
 
 interface GiraffeButtonData {
   id: string
@@ -15,13 +16,15 @@ interface Props {
   controlsVisible?: boolean
   buttonsVisible?: boolean
   showInteractiveContent?: boolean
+  binaryLabels?: Array<'A' | 'B'>
 }
 
 const props = withDefaults(defineProps<Props>(), {
   giraffeHeightsData: () => [],
   controlsVisible: true,
   buttonsVisible: true,
-  showInteractiveContent: true
+  showInteractiveContent: true,
+  binaryLabels: () => []
 })
 
 const selectedNumberValue = ref<number | null>(null)
@@ -191,56 +194,68 @@ const getDisplayNumber = (button: GiraffeButtonData) => {
     <div v-if="props.controlsVisible" class="w-full">
       <div class="w-full h-2 bg-brand-green-strip"></div>
       <div
-        class="bg-brand-green-light p-4 min-h-[238px] flex flex-col justify-center"
-        @touchmove.prevent="onTouchMove"
+        class="bg-brand-green-light p-4 min-h-[238px] relative"
+        @touchmove.prevent="onTouchMove" 
         @touchend.prevent="onTouchEnd"
       >
-        <div class="container mx-auto px-4">
-          <Transition name="fade">
-            <div v-if="props.buttonsVisible && props.showInteractiveContent" class="flex flex-col items-center gap-4 w-full sm:max-w-[360px] mx-auto">
-              <div class="flex justify-center gap-2 md:gap-4 w-full mb-4">
-                <div
-                  v-for="button in localButtons"
-                  :key="button.id"
-                  :data-button-id="button.id"
-                  @dragenter.prevent="onDragEnter(button.id)"
-                  @dragover.prevent="onDragOver"
-                  @drop.prevent="onDrop(button.id)"
-                  class="flex flex-col gap-1 items-center relative"
-                  :class="[
-                    'transform transition-all duration-150',
-                    {
-                      'scale-110': dragOverButtonId === button.id && draggedButtonId !== button.id
-                    }
-                  ]"
-                >
-                  <GameButton
-                    :value="getDisplayNumber(button)"
-                    :selected="selectedNumberValue === getDisplayNumber(button)"
-                    variant="primary"
-                    draggable
-                    @select="handleNumberSelect(button)"
-                    @dragstart="(e) => onDragStart(e, button.id)"
-                    @dragend="onDragEnd"
-                    @touchstart.stop="(e) => onTouchStart(e, button.id)"
-                  />
-                  <MoveHorizontal
-                    class="w-5 h-5 text-giraffe-stroke transition-opacity duration-200"
-                    :class="{ 'opacity-30': isDragging && draggedButtonId !== button.id, 'opacity-100': !isDragging }"
-                  />
-                </div>
-              </div>
-              <div class="w-full">
-                <BaseButton
-                  label="Let's Check!"
-                  variant="secondary"
-                  width="w-full"
-                  :disabled="isDragging"
-                  @click="handleCheck"
-                />
-              </div>
+        <!-- Binary Labels - shown only in binary comparison mode (no interactive content) -->
+        <div 
+          v-if="props.binaryLabels && props.binaryLabels.length > 0 && !props.showInteractiveContent"
+          class="flex justify-around items-center w-full max-w-xl mx-auto mb-2" 
+        >
+          <BinaryComparisonLabel 
+            v-for="label in props.binaryLabels" 
+            :key="label" 
+            :label="label"
+          />
+        </div>
+
+        <!-- Interactive Controls - shown only in orderByHeight mode -->
+        <div 
+          v-if="props.buttonsVisible && props.showInteractiveContent"
+          class="flex flex-col items-center justify-center gap-4 w-full sm:max-w-[360px] mx-auto h-full pt-2"
+        >
+          <div class="flex justify-center gap-2 md:gap-4 w-full mb-4">
+            <div
+              v-for="button in localButtons"
+              :key="button.id"
+              :data-button-id="button.id"
+              @dragenter.prevent="onDragEnter(button.id)"
+              @dragover.prevent="onDragOver"
+              @drop.prevent="onDrop(button.id)"
+              class="flex flex-col gap-1 items-center relative"
+              :class="[
+                'transform transition-all duration-150',
+                {
+                  'scale-110': dragOverButtonId === button.id && draggedButtonId !== button.id
+                }
+              ]"
+            >
+              <GameButton
+                :value="getDisplayNumber(button)"
+                :selected="selectedNumberValue === getDisplayNumber(button)"
+                variant="primary"
+                draggable
+                @select="handleNumberSelect(button)"
+                @dragstart="(e) => onDragStart(e, button.id)"
+                @dragend="onDragEnd"
+                @touchstart.stop="(e) => onTouchStart(e, button.id)"
+              />
+              <MoveHorizontal
+                class="w-5 h-5 text-giraffe-stroke transition-opacity duration-200"
+                :class="{ 'opacity-30': isDragging && draggedButtonId !== button.id, 'opacity-100': !isDragging }"
+              />
             </div>
-          </Transition>
+          </div>
+          <div class="w-full">
+            <BaseButton
+              label="Let's Check!"
+              variant="secondary"
+              width="w-full"
+              :disabled="isDragging"
+              @click="handleCheck"
+            />
+          </div>
         </div>
       </div>
     </div>

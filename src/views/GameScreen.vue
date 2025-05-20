@@ -10,6 +10,7 @@ import CountdownOverlay from '../components/CountdownOverlay.vue'
 import QuestionModal from '../components/QuestionModal.vue'
 import TertiaryQuestionModal from '../components/TertiaryQuestionModal.vue'
 import Giraffe from '../components/giraffe/Giraffe.vue'
+import BinaryComparisonLabel from '../components/BinaryComparisonLabel.vue'
 
 interface GiraffeData {
   id: string
@@ -107,6 +108,13 @@ function getBinaryGiraffeHeight(rawHeight: number): number {
   }
   return BINARY_MIN_SCALE + ((rawHeight - minRaw) / (maxRaw - minRaw)) * (BINARY_MAX_SCALE - BINARY_MIN_SCALE)
 }
+
+const binaryComparisonGiraffeLabels = computed(() => {
+  if (gameMode.value === 'binaryComparisonSymbols') {
+    return binaryComparisonGiraffes.value.map(g => g.label)
+  }
+  return []
+})
 
 const giraffeControlsData = computed(() => {
   return giraffes.value.map(g => ({ id: g.id, height: g.height }))
@@ -883,7 +891,6 @@ onMounted(() => {
             :show-speech-bubble="showSpeechBubblesGlobal"
             :multi-line="binaryComparisonGiraffes.length > 3"
           />
-          <div class="mt-2 text-brand-green-strip text-xl font-gabarito font-bold">{{ giraffe.label }}</div>
         </div>
       </div>
       
@@ -927,7 +934,11 @@ onMounted(() => {
     
     <!-- Container for GameControls (shell) and BinaryComparisonQuestionModal in binaryComparisonSymbols mode -->
     <div v-if="gameMode === 'binaryComparisonSymbols'" class="fixed bottom-0 left-0 right-0 z-10">
-      <GameControls :controls-visible="showBinaryComparisonControlsShell" :show-interactive-content="false" />
+      <GameControls 
+        :controls-visible="showBinaryComparisonControlsShell" 
+        :show-interactive-content="false" 
+        :binary-labels="binaryComparisonGiraffeLabels"
+      />
       <div class="absolute bottom-0 left-0 right-0">
         <TertiaryQuestionModal 
           :visible="showBinaryComparisonQuestionModal" 
