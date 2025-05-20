@@ -208,7 +208,7 @@ const getDisplayNumber = (button: GiraffeButtonData) => {
         <!-- Town Populations Display - shown for findTownPopulation mode -->
         <div 
           v-if="props.townPopulationsForDisplay && !props.showInteractiveContent"
-          class="w-full flex justify-around items-center bg-[#83CA54] py-3 px-4 sm:px-8 text-xl font-semibold text-white mb-4 rounded-md"
+          class="w-full flex justify-around items-center bg-[#83CA54] py-3 px-4 sm:px-8 text-xl font-semibold text-white rounded-md mt-[-20px]"
         >
           <div>{{ props.townPopulationsForDisplay.pop1 }}</div>
           <div class="text-2xl">?</div>

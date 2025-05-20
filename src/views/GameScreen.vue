@@ -653,7 +653,19 @@ function onContinue() {
   } else if (gameMode.value === 'compareTownPopulations') {
     if (overlayType.value === 'success') {
       gameStore.advanceStage()
-      gameMode.value = 'orderByHeight'
+      // Set gameMode to next stage's primary task mode
+      const nextPrimary = stageTasks.value?.primary?.type
+      if (nextPrimary === 'orderByTownPopulation') {
+        gameMode.value = 'orderByTownPopulation'
+      } else if (nextPrimary === 'findMissingNumber') {
+        gameMode.value = 'findMissingNumber'
+      } else if (nextPrimary === 'comparisonQuiz') {
+        gameMode.value = 'comparisonQuiz'
+      } else if (nextPrimary === 'binaryComparisonSymbols') {
+        gameMode.value = 'binaryComparisonSymbols'
+      } else {
+        gameMode.value = 'orderByHeight'
+      }
     } else {
       // Reset speech bubbles to initial state for retry
       compareTownsDisplayData.value = compareTownsDisplayData.value.map((town, index) => ({
@@ -677,7 +689,19 @@ function onContinue() {
       const hasTertiaryTask = tertiaryTask?.type === 'comparisonQuiz' || tertiaryTask?.type === 'binaryComparisonSymbols'
 
       if (hasTertiaryTask) {
-        gameMode.value = tertiaryTask.type === 'comparisonQuiz' ? 'comparisonQuiz' : 'binaryComparisonSymbols'
+        // Set gameMode to next stage's primary task mode
+        const nextPrimary = stageTasks.value?.primary?.type
+        if (nextPrimary === 'orderByTownPopulation') {
+          gameMode.value = 'orderByTownPopulation'
+        } else if (nextPrimary === 'findMissingNumber') {
+          gameMode.value = 'findMissingNumber'
+        } else if (nextPrimary === 'comparisonQuiz') {
+          gameMode.value = 'comparisonQuiz'
+        } else if (nextPrimary === 'binaryComparisonSymbols') {
+          gameMode.value = 'binaryComparisonSymbols'
+        } else {
+          gameMode.value = 'orderByHeight'
+        }
       } else {
         gameMode.value = 'orderByHeight'
       }
@@ -691,7 +715,19 @@ function onContinue() {
       showBinaryComparisonQuestionModal.value = false
       showBinaryComparisonGrass.value = false
       gameStore.advanceStage()
-      gameMode.value = 'orderByHeight'
+      // Set gameMode to next stage's primary task mode
+      const nextPrimary = stageTasks.value?.primary?.type
+      if (nextPrimary === 'orderByTownPopulation') {
+        gameMode.value = 'orderByTownPopulation'
+      } else if (nextPrimary === 'findMissingNumber') {
+        gameMode.value = 'findMissingNumber'
+      } else if (nextPrimary === 'comparisonQuiz') {
+        gameMode.value = 'comparisonQuiz'
+      } else if (nextPrimary === 'binaryComparisonSymbols') {
+        gameMode.value = 'binaryComparisonSymbols'
+      } else {
+        gameMode.value = 'orderByHeight'
+      }
     } else {
       showTertiaryQuestionModal.value = gameMode.value === 'comparisonQuiz'
       showBinaryComparisonQuestionModal.value = gameMode.value === 'binaryComparisonSymbols'
@@ -1116,9 +1152,8 @@ function handleCompareTownsOptionSelect(optionId: string) {
 
   showSpeechBubblesGlobal.value = true
   
-  setTimeout(() => {
-    showResultOverlay.value = true
-  }, 1500)
+  // Show the result overlay immediately instead of using setTimeout
+  showResultOverlay.value = true
 }
 
 onMounted(() => {
@@ -1346,28 +1381,27 @@ onMounted(() => {
       <!-- Town Displays with initial speech bubbles -->
       <div class="w-full flex justify-around items-start pt-12 px-4 sm:px-8">
         <TownDisplay 
-          :town="{id: townPopulationQuestion.townA.label, label: townPopulationQuestion.townA.label, population: townPopulationQuestion.townA.population, giraffeCount: 3}" 
+          :town="{ id: townPopulationQuestion?.townA.label ?? '', label: townPopulationQuestion?.townA.label ?? '', population: townPopulationQuestion?.townA.population ?? 0, giraffeCount: 3 }"
           :showPopulationInLabel="false"
           :hideLabelText="true"
-          :speechText="findTownPopulationSpeechData.find(s => s.id === townPopulationQuestion.townA.id)?.text || null"
-          :mood="findTownPopulationSpeechData.find(s => s.id === townPopulationQuestion.townA.id)?.mood || 'happy'"
+          :speechText="findTownPopulationSpeechData.find(s => s.id === townPopulationQuestion?.townA.id)?.text || null"
+          :mood="findTownPopulationSpeechData.find(s => s.id === townPopulationQuestion?.townA.id)?.mood || 'happy'"
           :showSpeechBubble="findTownPopulationSpeechBubblesVisible"
         />
         <TownDisplay 
-          :town="{id: 'new-town', label: townPopulationQuestion.townC.label, population: 0, giraffeCount: 3}" 
+          :town="{ id: 'new-town', label: townPopulationQuestion?.townC.label ?? '', population: 0, giraffeCount: 3 }"
           :showPopulationInLabel="false"
           :hideLabelText="true"
           :speechText="findTownPopulationSpeechData.find(s => s.id === 'new-town-speech')?.text || null"
           :mood="findTownPopulationSpeechData.find(s => s.id === 'new-town-speech')?.mood || 'happy'"
-          :showSpeechBubble="findTownPopulationSpeechBubblesVisible"
           class="mx-2"
         />
         <TownDisplay 
-          :town="{id: townPopulationQuestion.townB.label, label: townPopulationQuestion.townB.label, population: townPopulationQuestion.townB.population, giraffeCount: 3}" 
+          :town="{ id: townPopulationQuestion?.townB.label ?? '', label: townPopulationQuestion?.townB.label ?? '', population: townPopulationQuestion?.townB.population ?? 0, giraffeCount: 3 }"
           :showPopulationInLabel="false"
           :hideLabelText="true"
-          :speechText="findTownPopulationSpeechData.find(s => s.id === townPopulationQuestion.townB.id)?.text || null"
-          :mood="findTownPopulationSpeechData.find(s => s.id === townPopulationQuestion.townB.id)?.mood || 'happy'"
+          :speechText="findTownPopulationSpeechData.find(s => s.id === townPopulationQuestion?.townB.id)?.text || null"
+          :mood="findTownPopulationSpeechData.find(s => s.id === townPopulationQuestion?.townB.id)?.mood || 'happy'"
           :showSpeechBubble="findTownPopulationSpeechBubblesVisible"
         />
       </div>
