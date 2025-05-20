@@ -1014,9 +1014,8 @@ onMounted(() => {
     
     <!-- Container for Town population ordering stage -->
     <div v-if="gameMode === 'orderByTownPopulation'" class="pt-[120px] h-[calc(100vh-76px)] relative flex flex-col items-center">
-      <div class="w-full max-w-md p-6 rounded-lg relative" style="background: linear-gradient(135deg, #83CA54, #77BA40);">
-        <!-- First row of towns -->
-        <div class="flex justify-around w-full mb-8">
+      <div class="w-full max-w-md flex flex-col items-center space-y-4">
+        <div class="flex justify-around w-full">
           <TownDisplay
             v-for="(town, index) in orderedTownData.slice(0, 2)"
             :key="town.id"
@@ -1026,14 +1025,7 @@ onMounted(() => {
             :mood="townMoods[currentOrder.indexOf(town.id)]"
           />
         </div>
-        
-        <!-- Diagonal striped overlay for second row -->
-        <div class="absolute left-0 right-0 bottom-0 h-[50%] overflow-hidden pointer-events-none" style="z-index: 1;">
-          <div class="w-full h-full" style="background: repeating-linear-gradient(135deg, rgba(131, 202, 84, 0.6), rgba(131, 202, 84, 0.6) 10px, rgba(119, 186, 64, 0.6) 10px, rgba(119, 186, 64, 0.6) 20px);"></div>
-        </div>
-        
-        <!-- Second row of towns -->
-        <div class="flex justify-around w-full relative" style="z-index: 2;">
+        <div class="relative w-screen left-1/2 transform -translate-x-1/2 bg-[#83CA54] pt-6 pb-4 flex justify-around">
           <TownDisplay
             v-for="(town, index) in orderedTownData.slice(2, 4)"
             :key="town.id"
