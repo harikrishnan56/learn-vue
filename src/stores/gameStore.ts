@@ -35,13 +35,19 @@ export interface GameState {
 }
 
 function generateTownPopulations(): TownData[] {
-  const basePopulation = 2000 + Math.floor(Math.random() * 1000);
+  const basePopulation = 2000;
   const towns: TownData[] = [];
+  const usedPopulations = new Set<number>();
 
   for (let i = 0; i < 4; i++) {
     const label = String.fromCharCode(65 + i);
-    const variance = Math.floor(Math.random() * 1000) + 500;
-    const population = basePopulation + (i * variance);
+    let population;
+    
+    do {
+      population = basePopulation + Math.floor(Math.random() * 4000) + 500;
+    } while (usedPopulations.has(population));
+    
+    usedPopulations.add(population);
     
     towns.push({
       id: `town${label}`,
