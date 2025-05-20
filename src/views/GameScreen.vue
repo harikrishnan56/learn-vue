@@ -1024,13 +1024,16 @@ onMounted(() => {
           :mood="townMoods[index]"
         />
       </div>
-      <TownOrderControls
-        :towns="townList"
-        :initialOrder="currentOrder"
-        @order-updated="handleTownOrderUpdated"
-        @check="handleTownCheck"
-      />
     </div>
+    
+    <TownOrderControls
+      v-if="gameMode === 'orderByTownPopulation'"
+      :towns="townList"
+      :initialOrder="currentOrder"
+      @order-updated="handleTownOrderUpdated"
+      @check="handleTownCheck"
+      class="fixed bottom-0 left-0 right-0 z-10"
+    />
     
     <FeedbackOverlay :visible="showResultOverlay" :type="overlayType" :game-mode="gameMode" @continue="onContinue" />
     <CountdownOverlay
