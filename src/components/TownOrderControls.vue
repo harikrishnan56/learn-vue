@@ -49,7 +49,7 @@ function onCheck(){emit('check')}
 </script>
 
 <template>
-  <div class="p-4 bg-green-600 rounded-t-xl shadow-lg w-full flex flex-col items-center space-y-6">
+  <div class="pt-12 pb-8 px-4 bg-[#4FAB4C] rounded-t-xl shadow-lg w-full flex flex-col items-center space-y-6 h-[200px]">
     <div class="flex justify-center space-x-2">
       <div
         v-for="(t,i) in ordered"
@@ -63,14 +63,7 @@ function onCheck(){emit('check')}
         <GameButton :value="t.label" variant="secondary" :selected="false" :draggable="true" class="w-16 h-16" />
       </div>
     </div>
-    <div class="flex justify-center">
-      <button 
-        @click="onCheck"
-        class="px-8 py-2 rounded-xl text-xl font-gabarito font-bold bg-white text-[#77BA40] border border-[#77BA40] shadow-md hover:bg-gray-50 transition-colors"
-      >
-        Let's Check!
-      </button>
-    </div>
+    <BaseButton label="Let's Check!" variant="secondary" @click="onCheck" class="w-auto px-15 py-3" />
   </div>
 </template>
 
