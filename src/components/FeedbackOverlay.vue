@@ -2,7 +2,7 @@
   <transition name="slide">
     <div v-if="visible" class="fixed inset-0 bg-black/50 z-50">
       <div
-        class="absolute left-0 right-0 bottom-0 mb-4 mx-auto bg-[#3A8737] text-white p-8 rounded-t-2xl w-full flex flex-col items-center"
+        class="absolute left-0 right-0 bottom-0 mx-auto bg-[#3A8737] text-white p-8 rounded-t-2xl w-full flex flex-col items-center"
         :style="{ backgroundColor: bgColor }"
       >
         <h2 class="text-3xl font-gabarito font-normal mb-2">{{ title }}</h2>
