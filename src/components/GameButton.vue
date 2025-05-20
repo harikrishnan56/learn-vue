@@ -62,8 +62,8 @@ function handleTouchEnd(e: TouchEvent) {
       'focus:outline-none focus:ring-2 focus:ring-offset-2',
       {
         'w-[98px] h-[61px] bg-giraffe-fill text-giraffe-stroke border border-giraffe-stroke shadow-button-giraffe focus:ring-giraffe-stroke hover:bg-opacity-90 cursor-move': variant === 'primary',
-        'w-[80px] h-[61px] bg-giraffe-fill text-brand-green-light border border-brand-green-light shadow-answer-option focus:ring-brand-green-light hover:bg-opacity-90': variant === 'secondary',
-        'min-w-[80px] px-8 py-3 bg-giraffe-fill text-brand-green-light border border-brand-green-light shadow-answer-option focus:ring-brand-green-light hover:bg-opacity-90': variant === 'tertiary',
+        'w-[80px] h-[61px] bg-giraffe-fill text-[#77BA40] border border-[#77BA40] shadow-answer-option focus:ring-[#77BA40] hover:bg-opacity-90': variant === 'secondary',
+        'min-w-[80px] px-8 py-3 bg-giraffe-fill text-[#77BA40] border border-[#77BA40] shadow-answer-option focus:ring-[#77BA40] hover:bg-opacity-90': variant === 'tertiary',
         'scale-105 border-2 bg-white': selected
       }
     ]"
