@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Calculate how many pattern spots to render based on height and density
 const spotCount = () => {
-  const baseCount = Math.ceil(props.height / 30) // Fewer spots for more spacing
+  const baseCount = Math.ceil(props.height / 30) 
   
   switch (props.patternDensity) {
     case 'low': return Math.max(2, Math.floor(baseCount * 0.6))
@@ -27,7 +27,7 @@ const patternPositions = Array.from({ length: spotCount() }, (_, i) => {
   return {
     x: isLeftSide ? props.width * 0.1 : props.width * 0.6, // Alternating left and right
     y: Math.floor((i * props.height / spotCount()) + 10),  // More evenly spaced vertically
-    size: Math.floor(Math.random() * 4) + 10 // Larger spots: 10-14px
+    size: Math.floor(Math.random() * 4) + 10 
   }
 })
 </script>
