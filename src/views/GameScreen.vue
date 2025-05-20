@@ -1014,7 +1014,7 @@ onMounted(() => {
     
     <!-- Container for Town population ordering stage -->
     <div v-if="gameMode === 'orderByTownPopulation'" class="pt-[120px] h-[calc(100vh-76px)] relative flex flex-col items-center">
-      <div class="w-full max-w-md flex flex-col items-center space-y-4">
+      <div class="w-full flex flex-col items-center space-y-4">
         <div class="flex justify-around w-full">
           <TownDisplay
             v-for="(town, index) in orderedTownData.slice(0, 2)"
@@ -1025,7 +1025,7 @@ onMounted(() => {
             :mood="townMoods[currentOrder.indexOf(town.id)]"
           />
         </div>
-        <div class="relative w-screen left-1/2 transform -translate-x-1/2 bg-[#83CA54] pt-6 pb-4 flex justify-around">
+        <div class="w-full bg-[#83CA54] pt-8 pb-8 flex justify-around">
           <TownDisplay
             v-for="(town, index) in orderedTownData.slice(2, 4)"
             :key="town.id"
