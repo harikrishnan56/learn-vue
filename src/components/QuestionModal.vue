@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import GameButton from './GameButton.vue'
 
 interface Props {
@@ -7,12 +8,14 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const selectedOption = ref<number | null>(null)
 
 const emit = defineEmits<{
   (e: 'select', value: number): void
 }>()
 
 function handleSelect(value: number) {
+  selectedOption.value = value
   emit('select', value)
 }
 </script>
@@ -31,6 +34,7 @@ function handleSelect(value: number) {
           v-for="option in props.options"
           :key="option"
           :value="option"
+          :selected="selectedOption === option"
           variant="secondary"
           @select="handleSelect(option)"
         />
